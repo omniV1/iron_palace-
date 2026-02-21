@@ -1,0 +1,10 @@
+target/
+*.class
+*.jar
+!.mvn/wrapper/*.jar
+.idea/
+*.iml
+.settings/
+.project
+.classpath
+*.log
