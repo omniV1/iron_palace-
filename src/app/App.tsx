@@ -33,7 +33,7 @@ const crewMembers = [
     image: imgImg20261,
   },
   {
-    name: "Philippen",
+    name: "Lisa Philippen",
     role: "Co-Host",
     bio: "Not sure why she hangs out with us, but she does.",
     image: imgImg20291,
