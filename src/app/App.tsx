@@ -99,11 +99,7 @@ export default function App() {
   const [currentPhoto, setCurrentPhoto] = useState(0);
   const [hoveredCrew, setHoveredCrew] = useState<number | null>(null);
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
-  const [featuredPlaying, setFeaturedPlaying] = useState(false);
-  const { videos, loading: videosLoading } = useYouTubeVideos(15);
-
-  const latestVideoId = videos.length > 0 ? videos[0].videoId : null;
-  const latestVideoTitle = videos.length > 0 ? videos[0].title : "Latest Episode";
+  const { videos, loading: videosLoading, error: videosError } = useYouTubeVideos(15);
 
   const closeVideoModal = useCallback(() => setActiveVideoId(null), []);
 
@@ -337,46 +333,14 @@ export default function App() {
             viewport={{ once: true }}
             className="relative aspect-video max-w-5xl mx-auto rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.6)] ring-1 ring-white/10 group"
           >
-            {featuredPlaying && latestVideoId ? (
-              <iframe
-                className="absolute inset-0 w-full h-full"
-                src={`https://www.youtube.com/embed/${latestVideoId}?autoplay=1&playsinline=1`}
-                title={latestVideoTitle}
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-              />
-            ) : (
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={() => setFeaturedPlaying(true)}
-                onKeyDown={(e) => e.key === "Enter" && setFeaturedPlaying(true)}
-                className="absolute inset-0 cursor-pointer bg-black"
-                aria-label={`Play ${latestVideoTitle}`}
-              >
-                {latestVideoId ? (
-                  <img
-                    src={`https://i.ytimg.com/vi/${latestVideoId}/hqdefault.jpg`}
-                    alt={latestVideoTitle}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-zinc-900 animate-pulse" />
-                )}
-                <div className="absolute inset-0 bg-black/30 active:bg-black/50 transition-colors duration-300" />
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 sm:gap-4">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-600 flex items-center justify-center shadow-2xl shadow-red-900/60 active:scale-95 transition-transform duration-200">
-                    <Play className="w-7 h-7 sm:w-9 sm:h-9 text-white ml-0.5 sm:ml-1" fill="white" />
-                  </div>
-                  {latestVideoId && (
-                    <p className="text-white/90 text-sm sm:text-lg font-medium drop-shadow-lg max-w-xs sm:max-w-lg text-center px-4">
-                      {latestVideoTitle}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
+            <iframe
+              className="absolute inset-0 w-full h-full"
+              src="https://www.youtube.com/embed/videoseries?list=UU9tV0Z2xN1HtvQu5F-ERqpg&playsinline=1"
+              title="Latest YouTube Video"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
           </motion.div>
 
           <div className="text-center mt-8">
@@ -419,6 +383,22 @@ export default function App() {
                   <div className="h-3 bg-zinc-800 rounded w-1/2" />
                 </div>
               ))}
+            </div>
+          ) : videos.length === 0 || videosError ? (
+            <div className="max-w-2xl mx-auto text-center py-8">
+              <div className="aspect-video rounded-2xl overflow-hidden ring-1 ring-white/10 shadow-lg mb-6">
+                <iframe
+                  className="w-full h-full"
+                  src="https://www.youtube.com/embed/videoseries?list=UU9tV0Z2xN1HtvQu5F-ERqpg&playsinline=1"
+                  title="Iron Palace Podcast Videos"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              </div>
+              <p className="text-zinc-400 text-sm">
+                Browse all episodes directly on our YouTube channel
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">

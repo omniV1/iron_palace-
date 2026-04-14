@@ -11,7 +11,10 @@ export interface YouTubeVideo {
 
 const CHANNEL_ID = "UC9tV0Z2xN1HtvQu5F-ERqpg";
 const RSS_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`;
-const CORS_PROXY = "https://api.allorigins.win/raw?url=";
+const CORS_PROXIES = [
+  "https://api.allorigins.win/raw?url=",
+  "https://corsproxy.io/?url=",
+];
 const CACHE_KEY = "ipp_yt_videos";
 const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 
@@ -101,22 +104,27 @@ export function useYouTubeVideos(maxResults = 15) {
     let cancelled = false;
 
     async function fetchVideos() {
-      try {
-        const res = await fetch(CORS_PROXY + encodeURIComponent(RSS_URL));
-        if (!res.ok) throw new Error(`Feed fetch failed: ${res.status}`);
-        const xml = await res.text();
-        const parsed = parseRSS(xml);
-        writeCache(parsed);
-        if (!cancelled) {
-          setVideos(parsed.slice(0, maxResults));
-          setError(null);
+      for (const proxy of CORS_PROXIES) {
+        try {
+          const res = await fetch(proxy + encodeURIComponent(RSS_URL));
+          if (!res.ok) continue;
+          const xml = await res.text();
+          if (!xml.includes("<entry>")) continue;
+          const parsed = parseRSS(xml);
+          writeCache(parsed);
+          if (!cancelled) {
+            setVideos(parsed.slice(0, maxResults));
+            setError(null);
+            setLoading(false);
+          }
+          return;
+        } catch {
+          continue;
         }
-      } catch (err) {
-        if (!cancelled && videos.length === 0) {
-          setError(err instanceof Error ? err.message : "Failed to load videos");
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
+      }
+      if (!cancelled) {
+        setError("Failed to load videos");
+        setLoading(false);
       }
     }
 
