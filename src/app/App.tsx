@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Calendar, ChevronLeft, ChevronRight, Facebook, Instagram } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Facebook, Instagram, Play, X } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./components/ui/dialog";
+import { useYouTubeVideos, timeAgo } from "./hooks/useYouTubeVideos";
 
 import imgMerchDragon from "../imports/Group2/9fe969f07b1189f5a7e8d627018c5bf063261cab.png";
 import imgMerchWhite from "../imports/Group2/0e04069fb44385863cd0bed92320736368ccc2bc.png";
@@ -97,6 +98,14 @@ export default function App() {
   const [contactOpen, setContactOpen] = useState(false);
   const [currentPhoto, setCurrentPhoto] = useState(0);
   const [hoveredCrew, setHoveredCrew] = useState<number | null>(null);
+  const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
+  const [featuredPlaying, setFeaturedPlaying] = useState(false);
+  const { videos, loading: videosLoading } = useYouTubeVideos(15);
+
+  const latestVideoId = videos.length > 0 ? videos[0].videoId : null;
+  const latestVideoTitle = videos.length > 0 ? videos[0].title : "Latest Episode";
+
+  const closeVideoModal = useCallback(() => setActiveVideoId(null), []);
 
   // Auto-rotate gallery
   useEffect(() => {
@@ -328,15 +337,43 @@ export default function App() {
             viewport={{ once: true }}
             className="relative aspect-video max-w-5xl mx-auto rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.6)] ring-1 ring-white/10 group"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-red-600/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10"></div>
-            <iframe
-              className="w-full h-full"
-              src="https://www.youtube.com/embed?listType=user_uploads&list=TheIronPalacePodcast"
-              title="Latest YouTube Video"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            ></iframe>
+            {featuredPlaying && latestVideoId ? (
+              <iframe
+                className="w-full h-full"
+                src={`https://www.youtube.com/embed/${latestVideoId}?autoplay=1`}
+                title={latestVideoTitle}
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ) : (
+              <button
+                onClick={() => setFeaturedPlaying(true)}
+                className="w-full h-full relative cursor-pointer bg-black"
+                aria-label={`Play ${latestVideoTitle}`}
+              >
+                {latestVideoId ? (
+                  <img
+                    src={`https://i.ytimg.com/vi/${latestVideoId}/maxresdefault.jpg`}
+                    alt={latestVideoTitle}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-zinc-900 animate-pulse" />
+                )}
+                <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors duration-300" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+                  <div className="w-20 h-20 rounded-full bg-red-600 flex items-center justify-center shadow-2xl shadow-red-900/60 group-hover:scale-110 transition-transform duration-300">
+                    <Play className="w-9 h-9 text-white ml-1" fill="white" />
+                  </div>
+                  {latestVideoId && (
+                    <p className="text-white/90 text-lg font-medium drop-shadow-lg max-w-lg text-center px-4">
+                      {latestVideoTitle}
+                    </p>
+                  )}
+                </div>
+              </button>
+            )}
           </motion.div>
 
           <div className="text-center mt-8">
@@ -356,6 +393,123 @@ export default function App() {
           </div>
         </div>
       </section>
+
+      {/* Recent Episodes Grid — auto-updates from YouTube RSS */}
+      <section className="py-20 px-4 bg-black">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl md:text-4xl font-light tracking-wide uppercase mb-4">Recent Episodes</h2>
+            <p className="text-zinc-400 text-sm">Catch up on what you missed</p>
+          </motion.div>
+
+          {videosLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="aspect-video bg-zinc-800 rounded-xl mb-3" />
+                  <div className="h-4 bg-zinc-800 rounded w-3/4 mb-2" />
+                  <div className="h-3 bg-zinc-800 rounded w-1/2" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+              {videos.map((video, index) => (
+                <motion.div
+                  key={video.videoId}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ y: -4, scale: 1.02 }}
+                  className="group cursor-pointer"
+                  onClick={() => setActiveVideoId(video.videoId)}
+                >
+                  <div className="relative aspect-video rounded-xl overflow-hidden ring-1 ring-white/10 shadow-lg shadow-black/40 mb-3">
+                    <img
+                      src={video.thumbnail}
+                      alt={video.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300 flex items-center justify-center">
+                      <div className="w-14 h-14 rounded-full bg-red-600/90 flex items-center justify-center opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-100 transition-all duration-300 shadow-lg">
+                        <Play className="w-6 h-6 text-white ml-0.5" fill="white" />
+                      </div>
+                    </div>
+                  </div>
+                  <h3 className="text-sm font-medium line-clamp-2 group-hover:text-amber-400 transition-colors duration-200">
+                    {video.title}
+                  </h3>
+                  <p className="text-xs text-zinc-500 mt-1">
+                    {video.views.toLocaleString()} views &middot; {timeAgo(video.published)}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+          )}
+
+          <div className="text-center mt-10">
+            <a
+              href="https://www.youtube.com/@TheIronPalacePodcast"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block"
+            >
+              <Button className="relative bg-gradient-to-br from-amber-600 via-amber-600 to-amber-700 hover:from-amber-500 hover:via-amber-500 hover:to-amber-600 text-white font-medium px-5 py-3 rounded-lg shadow-lg shadow-amber-900/50 hover:shadow-xl hover:shadow-amber-900/60 hover:scale-105 transition-all duration-300 border border-amber-500/50 overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-b from-amber-400/60 via-transparent to-amber-950/70"></div>
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_0%,rgba(255,250,200,0.8),transparent_40%)]"></div>
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_100%,rgba(113,63,18,0.6),transparent_40%)]"></div>
+                <span className="relative z-10">View All on YouTube</span>
+              </Button>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* YouTube Video Modal */}
+      <AnimatePresence>
+        {activeVideoId && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={closeVideoModal}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", duration: 0.4 }}
+              className="relative w-full max-w-5xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={closeVideoModal}
+                className="absolute -top-12 right-0 text-white/70 hover:text-white transition-colors"
+                aria-label="Close video"
+              >
+                <X className="w-8 h-8" />
+              </button>
+              <div className="relative aspect-video rounded-2xl overflow-hidden ring-1 ring-white/20 shadow-2xl">
+                <iframe
+                  className="w-full h-full"
+                  src={`https://www.youtube.com/embed/${activeVideoId}?autoplay=1`}
+                  title="YouTube video"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Upcoming Events Section */}
       <section className="py-20 px-4 bg-black">
@@ -690,25 +844,34 @@ export default function App() {
               We appreciate every donation, no matter the size. Your contributions go towards equipment, editing, and making the show better for you!
             </p>
             <div className="grid grid-cols-2 gap-4">
-              <Button className="relative bg-gradient-to-br from-amber-600 via-amber-600 to-amber-700 hover:from-amber-500 hover:via-amber-500 hover:to-amber-600 text-white border border-amber-500/50 py-6 overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-b from-amber-400/60 via-transparent to-amber-950/70"></div>
-                <span className="relative z-10">Donate $5</span>
-              </Button>
-              <Button className="relative bg-gradient-to-br from-amber-600 via-amber-600 to-amber-700 hover:from-amber-500 hover:via-amber-500 hover:to-amber-600 text-white border border-amber-500/50 py-6 overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-b from-amber-400/60 via-transparent to-amber-950/70"></div>
-                <span className="relative z-10">Donate $10</span>
-              </Button>
-              <Button className="relative bg-gradient-to-br from-amber-600 via-amber-600 to-amber-700 hover:from-amber-500 hover:via-amber-500 hover:to-amber-600 text-white border border-amber-500/50 py-6 overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-b from-amber-400/60 via-transparent to-amber-950/70"></div>
-                <span className="relative z-10">Donate $25</span>
-              </Button>
-              <Button className="relative bg-gradient-to-br from-amber-600 via-amber-600 to-amber-700 hover:from-amber-500 hover:via-amber-500 hover:to-amber-600 text-white border border-amber-500/50 py-6 overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-b from-amber-400/60 via-transparent to-amber-950/70"></div>
-                <span className="relative z-10">Custom Amount</span>
-              </Button>
+              <a href="https://venmo.com/Caleb-Day-10?txn=pay&amount=5&note=Iron%20Palace%20Podcast%20Donation" target="_blank" rel="noopener noreferrer" className="block">
+                <Button className="w-full relative bg-gradient-to-br from-amber-600 via-amber-600 to-amber-700 hover:from-amber-500 hover:via-amber-500 hover:to-amber-600 text-white border border-amber-500/50 py-6 overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-b from-amber-400/60 via-transparent to-amber-950/70"></div>
+                  <span className="relative z-10">Donate $5</span>
+                </Button>
+              </a>
+              <a href="https://venmo.com/Caleb-Day-10?txn=pay&amount=10&note=Iron%20Palace%20Podcast%20Donation" target="_blank" rel="noopener noreferrer" className="block">
+                <Button className="w-full relative bg-gradient-to-br from-amber-600 via-amber-600 to-amber-700 hover:from-amber-500 hover:via-amber-500 hover:to-amber-600 text-white border border-amber-500/50 py-6 overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-b from-amber-400/60 via-transparent to-amber-950/70"></div>
+                  <span className="relative z-10">Donate $10</span>
+                </Button>
+              </a>
+              <a href="https://venmo.com/Caleb-Day-10?txn=pay&amount=25&note=Iron%20Palace%20Podcast%20Donation" target="_blank" rel="noopener noreferrer" className="block">
+                <Button className="w-full relative bg-gradient-to-br from-amber-600 via-amber-600 to-amber-700 hover:from-amber-500 hover:via-amber-500 hover:to-amber-600 text-white border border-amber-500/50 py-6 overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-b from-amber-400/60 via-transparent to-amber-950/70"></div>
+                  <span className="relative z-10">Donate $25</span>
+                </Button>
+              </a>
+              <a href="https://venmo.com/Caleb-Day-10?txn=pay&note=Iron%20Palace%20Podcast%20Donation" target="_blank" rel="noopener noreferrer" className="block">
+                <Button className="w-full relative bg-gradient-to-br from-amber-600 via-amber-600 to-amber-700 hover:from-amber-500 hover:via-amber-500 hover:to-amber-600 text-white border border-amber-500/50 py-6 overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-b from-amber-400/60 via-transparent to-amber-950/70"></div>
+                  <span className="relative z-10">Custom Amount</span>
+                </Button>
+              </a>
             </div>
-            <p className="text-xs text-zinc-500 text-center pt-4">
-              This is a placeholder donation interface. Connect your preferred payment processor to enable donations.
+            <p className="text-xs text-zinc-500 text-center pt-4 flex items-center justify-center gap-1.5">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M19.1 3.5c.8 1.3 1.2 2.7 1.2 4.3 0 3.4-2.3 7.3-4.2 10.2H10L8.5 3.8l5-.5.9 7.1c.8-1.4 1.8-3.5 1.8-5 0-1.5-.4-2.5-.9-3.3l3.8-1.6z"/></svg>
+              Powered by Venmo &middot; @Caleb-Day-10
             </p>
           </div>
         </DialogContent>

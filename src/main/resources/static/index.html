@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iron Palace Podcast</title>
+  <meta name="description" content="The Iron Palace Podcast — The World's Most Anabolic Podcast. Strength sports, powerlifting, Highland Games, and strongman culture.">
+  <link rel="icon" type="image/png" href="/images/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Asap:wght@400;500;600;700&family=Baskervville+SC&family=IM+Fell+DW+Pica&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    /* YouTube Featured Player */
+    .yt-featured {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+    .yt-featured-player {
+      flex: 1.6;
+      position: relative;
+      padding-bottom: 33.75%;
+      height: 0;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,.45);
+    }
+    .yt-featured-player iframe {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      border: none;
+    }
+    .yt-featured-info {
+      flex: 1;
+      color: #fff;
+    }
+    .btn-yt-subscribe {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      margin-top: 1.25rem;
+      padding: .65rem 1.4rem;
+      background: #c00;
+      color: #fff;
+      border-radius: 6px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background .2s;
+    }
+    .btn-yt-subscribe:hover { background: #900; }
+
+    /* Episode Card Play Overlay */
+    .episode-card { cursor: pointer; }
+    .episode-card-img { position: relative; }
+    .episode-play-overlay {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(.85);
+      opacity: 0;
+      transition: opacity .25s, transform .25s;
+      pointer-events: none;
+    }
+    .episode-play-overlay svg { width: 68px; height: 48px; }
+    .episode-card:hover .episode-play-overlay {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    /* YouTube Modal */
+    .yt-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(0,0,0,.85);
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .yt-modal.active { display: flex; }
+    .yt-modal-content {
+      position: relative;
+      width: 100%;
+      max-width: 960px;
+    }
+    .yt-modal-close {
+      position: absolute;
+      top: -40px; right: 0;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 2rem;
+      cursor: pointer;
+      line-height: 1;
+      z-index: 1;
+    }
+    .yt-modal-player {
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .yt-modal-player iframe {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      border: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .yt-featured {
+        flex-direction: column;
+        text-align: center;
+      }
+      .yt-featured-player {
+        padding-bottom: 56.25%;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav id="navbar">
+    <div class="nav-inner">
+      <a href="#home" class="nav-logo">
+        <img src="/images/white-logo.png" alt="Iron Palace Podcast">
+      </a>
+      <button class="nav-toggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links">
+        <li><a href="#home">Home</a></li>
+        <li><a href="#latest-episode">Watch</a></li>
+        <li><a href="#episodes">Episodes</a></li>
+        <li><a href="#merch">Merch</a></li>
+        <li><a href="#crew">Crew</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section id="home" class="hero">
+    <div class="hero-bg">
+      <img src="/images/lifting.jpg" alt="Iron Palace">
+    </div>
+    <div class="hero-fade"></div>
+    <div class="hero-content">
+      <h1 class="hero-title">
+        <span class="hero-title-top">The Iron Palace</span>
+        <span class="hero-title-bottom">Podcast</span>
+      </h1>
+      <p class="hero-tagline">The World's Most Anabolic Podcast</p>
+    </div>
+  </section>
+
+  <!-- Latest Episode — YouTube Embed -->
+  <section id="latest-episode" class="latest-episode">
+    <div class="yt-featured">
+      <div class="yt-featured-player">
+        <iframe
+          src="https://www.youtube.com/embed/D6oZswHPKGo"
+          title="Where Should You Spend Your Money?"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+        ></iframe>
+      </div>
+      <div class="yt-featured-info">
+        <div class="episode-badge">Latest Episode</div>
+        <h3 class="episode-title">Where Should You Spend Your Money?</h3>
+        <p class="episode-desc">The latest from The Iron Palace Podcast — the world's most anabolic podcast covering strength sports, powerlifting, and strongman culture.</p>
+        <a href="https://www.youtube.com/@TheIronPalacePodcast?sub_confirmation=1" target="_blank" rel="noopener" class="btn-yt-subscribe">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M21.58 7.19c-.23-.86-.91-1.54-1.77-1.77C18.25 5 12 5 12 5s-6.25 0-7.81.42c-.86.23-1.54.91-1.77 1.77C2 8.75 2 12 2 12s0 3.25.42 4.81c.23.86.91 1.54 1.77 1.77C5.75 19 12 19 12 19s6.25 0 7.81-.42c.86-.23 1.54-.91 1.77-1.77C22 15.25 22 12 22 12s0-3.25-.42-4.81zM10 15V9l5 3-5 3z"/></svg>
+          Subscribe on YouTube
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Merchandise -->
+  <section id="merch" class="merch-section">
+    <div class="section-header-dark">
+      <h2>Featured Merchandise</h2>
+    </div>
+    <div class="merch-grid">
+      <div class="merch-card">
+        <img src="/images/merch-dragon.jpg" alt="Dragon T-Shirt">
+      </div>
+      <div class="merch-card">
+        <img src="/images/merch-white.jpg" alt="White T-Shirt">
+      </div>
+      <div class="merch-card">
+        <img src="/images/merch-grey.jpg" alt="Grey T-Shirt">
+      </div>
+    </div>
+    <div class="merch-cta">
+      <a href="#" class="btn-outline">Shop All</a>
+    </div>
+  </section>
+
+  <!-- Start Listening / Episodes Grid -->
+  <section id="episodes" class="episodes-section">
+    <div class="section-header-light">
+      <h2>Start Listening Today</h2>
+    </div>
+    <div class="episodes-grid">
+      <div class="episode-card" data-yt="5Navs0tG9kg" onclick="openVideo(this)">
+        <div class="episode-card-img">
+          <img src="https://img.youtube.com/vi/5Navs0tG9kg/hqdefault.jpg" alt="Who Is Out Now?!">
+          <div class="episode-duration">1:03:14</div>
+          <div class="episode-play-overlay"><svg viewBox="0 0 68 48"><path d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55c-2.93.78-4.64 3.26-5.42 6.19C.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z" fill="red"/><path d="M45 24L27 14v20" fill="white"/></svg></div>
+        </div>
+        <div class="episode-card-info">
+          <h4>Who Is Out Now?!</h4>
+          <span class="episode-meta">114 views &middot; 6 days ago</span>
+        </div>
+      </div>
+      <div class="episode-card" data-yt="wW_qKqce44w" onclick="openVideo(this)">
+        <div class="episode-card-img">
+          <img src="https://img.youtube.com/vi/wW_qKqce44w/hqdefault.jpg" alt="The 2026 Tennessee Winter Beer Fest">
+          <div class="episode-duration">1:21:03</div>
+          <div class="episode-play-overlay"><svg viewBox="0 0 68 48"><path d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55c-2.93.78-4.64 3.26-5.42 6.19C.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z" fill="red"/><path d="M45 24L27 14v20" fill="white"/></svg></div>
+        </div>
+        <div class="episode-card-info">
+          <h4>The 2026 Tennessee Winter Beer Fest</h4>
+          <span class="episode-meta">33 views &middot; 10 days ago</span>
+        </div>
+      </div>
+      <div class="episode-card" data-yt="cYb9F5JVFbA" onclick="openVideo(this)">
+        <div class="episode-card-img">
+          <img src="https://img.youtube.com/vi/cYb9F5JVFbA/hqdefault.jpg" alt="Derek Wilcox: From Bending Bars to Bending Arms">
+          <div class="episode-duration">1:15:44</div>
+          <div class="episode-play-overlay"><svg viewBox="0 0 68 48"><path d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55c-2.93.78-4.64 3.26-5.42 6.19C.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z" fill="red"/><path d="M45 24L27 14v20" fill="white"/></svg></div>
+        </div>
+        <div class="episode-card-info">
+          <h4>Derek Wilcox: From Bending Bars to Bending Arms</h4>
+          <span class="episode-meta">30 views &middot; 2 weeks ago</span>
+        </div>
+      </div>
+      <div class="episode-card" data-yt="sWCEkaYuvtA" onclick="openVideo(this)">
+        <div class="episode-card-img">
+          <img src="https://img.youtube.com/vi/sWCEkaYuvtA/hqdefault.jpg" alt="Geoff Capes the Strongest of His Era">
+          <div class="episode-duration">1:08:22</div>
+          <div class="episode-play-overlay"><svg viewBox="0 0 68 48"><path d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55c-2.93.78-4.64 3.26-5.42 6.19C.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z" fill="red"/><path d="M45 24L27 14v20" fill="white"/></svg></div>
+        </div>
+        <div class="episode-card-info">
+          <h4>Geoff Capes the Strongest of His Era</h4>
+          <span class="episode-meta">34 views &middot; 3 weeks ago</span>
+        </div>
+      </div>
+      <div class="episode-card" data-yt="ESHhJWBn2lw" onclick="openVideo(this)">
+        <div class="episode-card-img">
+          <img src="https://img.youtube.com/vi/ESHhJWBn2lw/hqdefault.jpg" alt="What Equipment Do You Need For a Homegym">
+          <div class="episode-duration">55:18</div>
+          <div class="episode-play-overlay"><svg viewBox="0 0 68 48"><path d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55c-2.93.78-4.64 3.26-5.42 6.19C.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z" fill="red"/><path d="M45 24L27 14v20" fill="white"/></svg></div>
+        </div>
+        <div class="episode-card-info">
+          <h4>What Equipment Do You Need For a Homegym</h4>
+          <span class="episode-meta">41 views &middot; 1 month ago</span>
+        </div>
+      </div>
+      <div class="episode-card" data-yt="rvfZcjnqAsI" onclick="openVideo(this)">
+        <div class="episode-card-img">
+          <img src="https://img.youtube.com/vi/rvfZcjnqAsI/hqdefault.jpg" alt="Ally Abbs">
+          <div class="episode-duration">1:17:51</div>
+          <div class="episode-play-overlay"><svg viewBox="0 0 68 48"><path d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55c-2.93.78-4.64 3.26-5.42 6.19C.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z" fill="red"/><path d="M45 24L27 14v20" fill="white"/></svg></div>
+        </div>
+        <div class="episode-card-info">
+          <h4>Ally Abbs</h4>
+          <span class="episode-meta">42 views &middot; 1 month ago</span>
+        </div>
+      </div>
+      <div class="episode-card" data-yt="72BjKqqwzHI" onclick="openVideo(this)">
+        <div class="episode-card-img">
+          <img src="https://img.youtube.com/vi/72BjKqqwzHI/hqdefault.jpg" alt="Our Favorite Events at World's Strongest Man">
+          <div class="episode-duration">1:03:14</div>
+          <div class="episode-play-overlay"><svg viewBox="0 0 68 48"><path d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55c-2.93.78-4.64 3.26-5.42 6.19C.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z" fill="red"/><path d="M45 24L27 14v20" fill="white"/></svg></div>
+        </div>
+        <div class="episode-card-info">
+          <h4>Our Favorite Events at World's Strongest Man</h4>
+          <span class="episode-meta">35 views &middot; 1 month ago</span>
+        </div>
+      </div>
+      <div class="episode-card" data-yt="H4OYegYvquY" onclick="openVideo(this)">
+        <div class="episode-card-img">
+          <img src="https://img.youtube.com/vi/H4OYegYvquY/hqdefault.jpg" alt="Krampus or Santa?">
+          <div class="episode-duration">1:20:56</div>
+          <div class="episode-play-overlay"><svg viewBox="0 0 68 48"><path d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55c-2.93.78-4.64 3.26-5.42 6.19C.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z" fill="red"/><path d="M45 24L27 14v20" fill="white"/></svg></div>
+        </div>
+        <div class="episode-card-info">
+          <h4>Krampus or Santa?</h4>
+          <span class="episode-meta">56 views &middot; 1 month ago</span>
+        </div>
+      </div>
+    </div>
+    <div class="merch-cta" style="margin-top:2rem;">
+      <a href="https://www.youtube.com/@TheIronPalacePodcast" target="_blank" rel="noopener" class="btn-outline">View More on YouTube</a>
+    </div>
+  </section>
+
+  <!-- YouTube Video Modal -->
+  <div id="ytModal" class="yt-modal" onclick="closeVideo(event)">
+    <div class="yt-modal-content">
+      <button class="yt-modal-close" onclick="closeVideo(event)" aria-label="Close">&times;</button>
+      <div class="yt-modal-player">
+        <iframe id="ytModalIframe" src="" title="YouTube video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- Meet The Crew -->
+  <section id="crew" class="crew-section">
+    <div class="section-header-dark">
+      <h2>Meet The Crew</h2>
+    </div>
+    <div class="crew-grid">
+      <div class="crew-member" data-name="Caleb" data-role="Co-Host" data-desc="Powerlifting enthusiast and strongman competitor">
+        <img src="/images/crew-1.jpg" alt="Crew member">
+      </div>
+      <div class="crew-member" data-name="Holland" data-role="Co-Host" data-desc="Highland Games athlete and strength culture advocate">
+        <img src="/images/crew-2.jpg" alt="Crew member">
+      </div>
+      <div class="crew-member active" data-name="Michael Cotney" data-role="Manager" data-desc="The man with the unfortunate responsibility of dealing with this bunch">
+        <img src="/images/crew-3.jpg" alt="Crew member">
+      </div>
+      <div class="crew-member" data-name="Crew Member" data-role="Regular" data-desc="Part of the Iron Palace family">
+        <img src="/images/crew-4.jpg" alt="Crew member">
+      </div>
+      <div class="crew-member" data-name="Crew Member" data-role="Regular" data-desc="Part of the Iron Palace family">
+        <img src="/images/crew-5.jpg" alt="Crew member">
+      </div>
+    </div>
+    <div class="crew-info-card" id="crewInfoCard">
+      <div class="crew-pointer"></div>
+      <h3 id="crewName">Michael Cotney - Manager</h3>
+      <p id="crewDesc">The man with the unfortunate responsibility of dealing with this bunch</p>
+    </div>
+  </section>
+
+  <!-- Contact / Events CTA -->
+  <section id="contact" class="contact-section">
+    <h2>Interested in participating in an event?</h2>
+    <a href="mailto:ironpalacepodcast@gmail.com" class="btn-outline">Contact Us</a>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <img src="/images/white-logo.png" alt="Iron Palace Podcast" class="footer-logo">
+      <p>&copy; 2026 Iron Palace Podcast. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="/js/app.js"></script>
+  <script>
+    function openVideo(card) {
+      var id = card.getAttribute('data-yt');
+      if (!id) return;
+      var modal = document.getElementById('ytModal');
+      var iframe = document.getElementById('ytModalIframe');
+      iframe.src = 'https://www.youtube.com/embed/' + id + '?autoplay=1';
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeVideo(e) {
+      if (e.target.classList.contains('yt-modal') || e.target.classList.contains('yt-modal-close')) {
+        var modal = document.getElementById('ytModal');
+        var iframe = document.getElementById('ytModalIframe');
+        iframe.src = '';
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    }
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        var modal = document.getElementById('ytModal');
+        if (modal.classList.contains('active')) {
+          document.getElementById('ytModalIframe').src = '';
+          modal.classList.remove('active');
+          document.body.style.overflow = '';
+        }
+      }
+    });
+  </script>
+</body>
+</html>
