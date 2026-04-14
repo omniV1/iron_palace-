@@ -14,7 +14,10 @@ const RSS_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_I
 const CORS_PROXIES = [
   "https://api.allorigins.win/raw?url=",
   "https://corsproxy.io/?url=",
+  "https://api.codetabs.com/v1/proxy/?quest=",
+  "https://thingproxy.freeboard.io/fetch/",
 ];
+const FETCH_TIMEOUT_MS = 5000;
 const CACHE_KEY = "ipp_yt_videos";
 const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 
@@ -103,14 +106,26 @@ export function useYouTubeVideos(maxResults = 15) {
   useEffect(() => {
     let cancelled = false;
 
+    async function fetchWithTimeout(url: string) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+      try {
+        return await fetch(url, { signal: controller.signal });
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
     async function fetchVideos() {
       for (const proxy of CORS_PROXIES) {
+        if (cancelled) return;
         try {
-          const res = await fetch(proxy + encodeURIComponent(RSS_URL));
+          const res = await fetchWithTimeout(proxy + encodeURIComponent(RSS_URL));
           if (!res.ok) continue;
           const xml = await res.text();
           if (!xml.includes("<entry>")) continue;
           const parsed = parseRSS(xml);
+          if (parsed.length === 0) continue;
           writeCache(parsed);
           if (!cancelled) {
             setVideos(parsed.slice(0, maxResults));

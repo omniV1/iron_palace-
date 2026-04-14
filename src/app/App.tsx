@@ -411,8 +411,7 @@ export default function App() {
                 <motion.div
                   key={video.videoId}
                   initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
+                  animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
                   whileHover={{ y: -4, scale: 1.02 }}
                   className="group cursor-pointer active:scale-[0.98] transition-transform"
