@@ -5,19 +5,19 @@ import { Button } from "./components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./components/ui/dialog";
 import { useYouTubeVideos, timeAgo } from "./hooks/useYouTubeVideos";
 
-import imgMerchDragon from "../imports/Group2/9fe969f07b1189f5a7e8d627018c5bf063261cab.png";
-import imgMerchWhite from "../imports/Group2/0e04069fb44385863cd0bed92320736368ccc2bc.png";
-import imgMerchGrey from "../imports/Group2/27719387f55cc5e04ab298523fd29ec98849c475.png";
-import imgLifting from "../imports/Group2/b5fff0d1593285f075f46cfdc89c44bd3b39097f.png";
-import imgImg20281 from "../imports/Group2/3079c0be861de6bc379a6ca769dbf0748207144a.png";
-import imgImg20291 from "../imports/Group2/ce8df0c659a26b7d011b713b1e18821bf06bf4e1.png";
-import imgImg20251 from "../imports/Group2/1ede6e433cb6efbe5f751aee62ab893cda99b1d5.png";
-import imgImg20311 from "../imports/Group2/8c77f10a72680404a307b4bf8049706d39cdd092.png";
-import imgImg20261 from "../imports/Group2/d32e1b27f2f8c2210ddd1d6f3ea0ca06e1cadb54.png";
-import imgNewLogo from "../assets/feef32863d06775804f6af6bbe43f8df154b97b4.png";
-import imgCommunity1 from "../assets/1ea5b08a1e66e411f08d673b6535fb4addf3fed8.png";
-import imgCommunity2 from "../assets/60f79edf345665e7536dfcdb7ba228f0f791b1b7.png";
-import imgCommunity3 from "../assets/da863c2d6b8087a171fdd66ac8e98684908370f4.png";
+import imgMerchDragon from "../imports/Group2/9fe969f07b1189f5a7e8d627018c5bf063261cab.png?w=800&format=webp&quality=80";
+import imgMerchWhite from "../imports/Group2/0e04069fb44385863cd0bed92320736368ccc2bc.png?w=800&format=webp&quality=80";
+import imgMerchGrey from "../imports/Group2/27719387f55cc5e04ab298523fd29ec98849c475.png?w=800&format=webp&quality=80";
+import imgLifting from "../imports/Group2/b5fff0d1593285f075f46cfdc89c44bd3b39097f.png?w=1920&format=webp&quality=75";
+import imgImg20281 from "../imports/Group2/3079c0be861de6bc379a6ca769dbf0748207144a.png?w=600&format=webp&quality=80";
+import imgImg20291 from "../imports/Group2/ce8df0c659a26b7d011b713b1e18821bf06bf4e1.png?w=600&format=webp&quality=80";
+import imgImg20251 from "../imports/Group2/1ede6e433cb6efbe5f751aee62ab893cda99b1d5.png?w=600&format=webp&quality=80";
+import imgImg20311 from "../imports/Group2/8c77f10a72680404a307b4bf8049706d39cdd092.png?w=600&format=webp&quality=80";
+import imgImg20261 from "../imports/Group2/d32e1b27f2f8c2210ddd1d6f3ea0ca06e1cadb54.png?w=600&format=webp&quality=80";
+import imgNewLogo from "../assets/feef32863d06775804f6af6bbe43f8df154b97b4.png?w=500&format=webp&quality=85";
+import imgCommunity1 from "../assets/1ea5b08a1e66e411f08d673b6535fb4addf3fed8.png?w=1600&format=webp&quality=80";
+import imgCommunity2 from "../assets/60f79edf345665e7536dfcdb7ba228f0f791b1b7.png?w=1600&format=webp&quality=80";
+import imgCommunity3 from "../assets/da863c2d6b8087a171fdd66ac8e98684908370f4.png?w=1600&format=webp&quality=80";
 
 const crewMembers = [
   {
@@ -125,7 +125,7 @@ export default function App() {
       <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        className="fixed top-0 left-0 right-0 z-50 bg-black/40 backdrop-blur-xl border-b border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
+        className="fixed top-0 left-0 right-0 z-50 bg-black/60 backdrop-blur-md border-b border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
@@ -134,7 +134,7 @@ export default function App() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <img src={imgNewLogo} alt="Iron Palace Podcast" className="h-12 w-auto" />
+              <img src={imgNewLogo} alt="Iron Palace Podcast" className="h-12 w-auto" decoding="async" fetchPriority="high" />
             </a>
 
             <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3 md:gap-4">
@@ -251,7 +251,7 @@ export default function App() {
 
       {/* Fixed inquire bar — same glass treatment as header */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/20 bg-black/40 backdrop-blur-xl shadow-[0_-8px_32px_rgba(0,0,0,0.3)] pb-[max(0.5rem,env(safe-area-inset-bottom))]"
+        className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/20 bg-black/60 backdrop-blur-md shadow-[0_-8px_32px_rgba(0,0,0,0.3)] pb-[max(0.5rem,env(safe-area-inset-bottom))]"
         role="region"
         aria-label="Participation inquiry"
       >
@@ -276,6 +276,8 @@ export default function App() {
             src={imgLifting}
             alt="The Iron Palace"
             className="w-full h-full object-cover scale-105"
+            decoding="async"
+            fetchPriority="high"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black"></div>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.3)_100%)]"></div>
@@ -298,8 +300,9 @@ export default function App() {
               src={imgNewLogo}
               alt="The Iron Palace Podcast"
               className="w-full h-auto relative z-10"
+              decoding="async"
               style={{
-                filter: 'brightness(2) contrast(1.2) drop-shadow(0 0 40px rgba(255,255,255,0.8)) drop-shadow(0 10px 60px rgba(220,38,38,0.4))',
+                filter: 'brightness(1.8) drop-shadow(0 0 30px rgba(255,255,255,0.7))',
               }}
             />
           </motion.div>
@@ -338,6 +341,7 @@ export default function App() {
               src="https://www.youtube.com/embed/videoseries?list=UU9tV0Z2xN1HtvQu5F-ERqpg&playsinline=1"
               title="Latest YouTube Video"
               frameBorder="0"
+              loading="lazy"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
             />
@@ -392,6 +396,7 @@ export default function App() {
                   src="https://www.youtube.com/embed/videoseries?list=UU9tV0Z2xN1HtvQu5F-ERqpg&index=1&playsinline=1"
                   title="Iron Palace Podcast Videos"
                   frameBorder="0"
+                  loading="lazy"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
                 />
@@ -568,6 +573,8 @@ export default function App() {
                   <img
                     src={item.image}
                     alt={item.name}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -625,6 +632,8 @@ export default function App() {
                   <img
                     src={member.image}
                     alt={member.name}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                     style={index === 0 ? { objectPosition: '70% 15%', transform: 'scale(2.2) translateX(-15%)' } : {}}
                   />
@@ -687,6 +696,8 @@ export default function App() {
                   key={currentPhoto}
                   src={galleryPhotos[currentPhoto]}
                   alt={`Gallery photo ${currentPhoto + 1}`}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover"
                   initial={{ opacity: 0, x: 100 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -746,7 +757,7 @@ export default function App() {
       <footer className="relative z-50 bg-black py-8 px-4 border-t border-white/10">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col items-center gap-6">
-            <img src={imgNewLogo} alt="Iron Palace Podcast" className="h-16 w-auto" />
+            <img src={imgNewLogo} alt="Iron Palace Podcast" className="h-16 w-auto" loading="lazy" decoding="async" />
 
             <div className="flex items-center gap-4">
               <a
