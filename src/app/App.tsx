@@ -339,40 +339,43 @@ export default function App() {
           >
             {featuredPlaying && latestVideoId ? (
               <iframe
-                className="w-full h-full"
-                src={`https://www.youtube.com/embed/${latestVideoId}?autoplay=1`}
+                className="absolute inset-0 w-full h-full"
+                src={`https://www.youtube.com/embed/${latestVideoId}?autoplay=1&playsinline=1`}
                 title={latestVideoTitle}
                 frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
               />
             ) : (
-              <button
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => setFeaturedPlaying(true)}
-                className="w-full h-full relative cursor-pointer bg-black"
+                onKeyDown={(e) => e.key === "Enter" && setFeaturedPlaying(true)}
+                className="absolute inset-0 cursor-pointer bg-black"
                 aria-label={`Play ${latestVideoTitle}`}
               >
                 {latestVideoId ? (
                   <img
-                    src={`https://i.ytimg.com/vi/${latestVideoId}/maxresdefault.jpg`}
+                    src={`https://i.ytimg.com/vi/${latestVideoId}/hqdefault.jpg`}
                     alt={latestVideoTitle}
                     className="w-full h-full object-cover"
                   />
                 ) : (
                   <div className="w-full h-full bg-zinc-900 animate-pulse" />
                 )}
-                <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors duration-300" />
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-                  <div className="w-20 h-20 rounded-full bg-red-600 flex items-center justify-center shadow-2xl shadow-red-900/60 group-hover:scale-110 transition-transform duration-300">
-                    <Play className="w-9 h-9 text-white ml-1" fill="white" />
+                <div className="absolute inset-0 bg-black/30 active:bg-black/50 transition-colors duration-300" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 sm:gap-4">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-600 flex items-center justify-center shadow-2xl shadow-red-900/60 active:scale-95 transition-transform duration-200">
+                    <Play className="w-7 h-7 sm:w-9 sm:h-9 text-white ml-0.5 sm:ml-1" fill="white" />
                   </div>
                   {latestVideoId && (
-                    <p className="text-white/90 text-lg font-medium drop-shadow-lg max-w-lg text-center px-4">
+                    <p className="text-white/90 text-sm sm:text-lg font-medium drop-shadow-lg max-w-xs sm:max-w-lg text-center px-4">
                       {latestVideoTitle}
                     </p>
                   )}
                 </div>
-              </button>
+              </div>
             )}
           </motion.div>
 
@@ -427,18 +430,19 @@ export default function App() {
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.05 }}
                   whileHover={{ y: -4, scale: 1.02 }}
-                  className="group cursor-pointer"
+                  className="group cursor-pointer active:scale-[0.98] transition-transform"
                   onClick={() => setActiveVideoId(video.videoId)}
                 >
                   <div className="relative aspect-video rounded-xl overflow-hidden ring-1 ring-white/10 shadow-lg shadow-black/40 mb-3">
                     <img
                       src={video.thumbnail}
                       alt={video.title}
+                      loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300 flex items-center justify-center">
-                      <div className="w-14 h-14 rounded-full bg-red-600/90 flex items-center justify-center opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-100 transition-all duration-300 shadow-lg">
-                        <Play className="w-6 h-6 text-white ml-0.5" fill="white" />
+                    <div className="absolute inset-0 bg-black/20 sm:bg-black/0 group-hover:bg-black/40 transition-colors duration-300 flex items-center justify-center">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-red-600/90 flex items-center justify-center opacity-80 sm:opacity-0 group-hover:opacity-100 scale-90 sm:scale-75 group-hover:scale-100 transition-all duration-300 shadow-lg">
+                        <Play className="w-5 h-5 sm:w-6 sm:h-6 text-white ml-0.5" fill="white" />
                       </div>
                     </div>
                   </div>
@@ -478,7 +482,7 @@ export default function App() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
+            className="fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center p-3 sm:p-4"
             onClick={closeVideoModal}
           >
             <motion.div
@@ -491,18 +495,18 @@ export default function App() {
             >
               <button
                 onClick={closeVideoModal}
-                className="absolute -top-12 right-0 text-white/70 hover:text-white transition-colors"
+                className="absolute -top-10 sm:-top-12 right-0 z-10 bg-white/10 sm:bg-transparent rounded-full p-1.5 text-white/80 hover:text-white active:scale-90 transition-all"
                 aria-label="Close video"
               >
-                <X className="w-8 h-8" />
+                <X className="w-7 h-7 sm:w-8 sm:h-8" />
               </button>
-              <div className="relative aspect-video rounded-2xl overflow-hidden ring-1 ring-white/20 shadow-2xl">
+              <div className="relative aspect-video rounded-xl sm:rounded-2xl overflow-hidden ring-1 ring-white/20 shadow-2xl">
                 <iframe
-                  className="w-full h-full"
-                  src={`https://www.youtube.com/embed/${activeVideoId}?autoplay=1`}
+                  className="absolute inset-0 w-full h-full"
+                  src={`https://www.youtube.com/embed/${activeVideoId}?autoplay=1&playsinline=1`}
                   title="YouTube video"
                   frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
                 />
               </div>
