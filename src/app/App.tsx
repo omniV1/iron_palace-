@@ -33,7 +33,7 @@ const crewMembers = [
     image: imgImg20261,
   },
   {
-    name: "Lisa Ellen",
+    name: "Philippen",
     role: "Co-Host",
     bio: "Not sure why she hangs out with us, but she does.",
     image: imgImg20291,
@@ -380,7 +380,7 @@ export default function App() {
 
           {videosLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-              {Array.from({ length: 6 }).map((_, i) => (
+              {Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className="animate-pulse">
                   <div className="aspect-video bg-zinc-800 rounded-xl mb-3" />
                   <div className="h-4 bg-zinc-800 rounded w-3/4 mb-2" />
@@ -407,7 +407,7 @@ export default function App() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-              {videos.slice(1).map((video, index) => (
+              {videos.slice(1, 4).map((video, index) => (
                 <motion.div
                   key={video.videoId}
                   initial={{ opacity: 0, y: 30 }}
