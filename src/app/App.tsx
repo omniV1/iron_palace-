@@ -384,12 +384,12 @@ export default function App() {
                 </div>
               ))}
             </div>
-          ) : videos.length === 0 || videosError ? (
+          ) : videos.length <= 1 || videosError ? (
             <div className="max-w-2xl mx-auto text-center py-8">
               <div className="aspect-video rounded-2xl overflow-hidden ring-1 ring-white/10 shadow-lg mb-6">
                 <iframe
                   className="w-full h-full"
-                  src="https://www.youtube.com/embed/videoseries?list=UU9tV0Z2xN1HtvQu5F-ERqpg&playsinline=1"
+                  src="https://www.youtube.com/embed/videoseries?list=UU9tV0Z2xN1HtvQu5F-ERqpg&index=1&playsinline=1"
                   title="Iron Palace Podcast Videos"
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -402,7 +402,7 @@ export default function App() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-              {videos.map((video, index) => (
+              {videos.slice(1).map((video, index) => (
                 <motion.div
                   key={video.videoId}
                   initial={{ opacity: 0, y: 30 }}
@@ -578,14 +578,19 @@ export default function App() {
           </div>
 
           <div className="text-center">
-            <div className="inline-block relative overflow-hidden group rounded-lg">
+            <a
+              href="https://www.etsy.com/shop/KDayDreamDesigns?dd_referrer="
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block relative overflow-hidden group rounded-lg"
+            >
               <Button className="relative bg-gradient-to-br from-amber-600 via-amber-600 to-amber-700 hover:from-amber-500 hover:via-amber-500 hover:to-amber-600 text-white border border-amber-500/50 rounded-lg px-6 py-3 text-sm font-light uppercase tracking-wider transition-all hover:scale-105 shadow-lg shadow-amber-900/50 hover:shadow-xl hover:shadow-amber-900/60 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-b from-amber-400/60 via-transparent to-amber-950/70"></div>
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_0%,rgba(255,250,200,0.8),transparent_40%)]"></div>
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_100%,rgba(113,63,18,0.6),transparent_40%)]"></div>
                 <span className="relative z-10">Shop All</span>
               </Button>
-            </div>
+            </a>
           </div>
         </div>
       </section>
