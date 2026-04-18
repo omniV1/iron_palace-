@@ -203,48 +203,52 @@ export default function App() {
               </a>
             </div>
 
-            <Button
+            <button
               onClick={() => setDonateOpen(true)}
-              className="relative shrink-0 bg-gradient-to-br from-amber-600 via-amber-600 to-amber-700 hover:from-amber-500 hover:via-amber-500 hover:to-amber-600 text-white shadow-lg shadow-amber-900/40 hover:shadow-xl hover:shadow-amber-900/50 hover:scale-105 transition-all duration-300 border border-amber-500/50 overflow-hidden"
+              className="relative shrink-0 group transition-transform duration-300 hover:scale-105 active:scale-95"
+              aria-label="Donate - Just the TIPP Jar"
             >
-              <div className="absolute inset-0 bg-gradient-to-b from-amber-400/60 via-transparent to-amber-950/70"></div>
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_0%,rgba(255,250,200,0.8),transparent_40%)]"></div>
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_100%,rgba(113,63,18,0.6),transparent_40%)]"></div>
-              <div className="relative mr-0 sm:mr-2 h-4 w-4 z-10">
-                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 24 24" fill="none">
-                  <defs>
-                    <filter id="heartInnerShadow" x="-50%" y="-50%" width="200%" height="200%">
-                      <feComponentTransfer in="SourceAlpha" result="inverse">
-                        <feFuncA type="table" tableValues="1 0"/>
-                      </feComponentTransfer>
-                      <feGaussianBlur in="inverse" stdDeviation="1.2" result="blur"/>
-                      <feOffset in="blur" dx="0" dy="2" result="offsetBlur"/>
-                      <feFlood floodColor="rgb(127, 29, 29)" floodOpacity="0.85" result="color"/>
-                      <feComposite in="color" in2="offsetBlur" operator="in" result="shadow"/>
-                      <feComposite in="shadow" in2="SourceAlpha" operator="in" result="innerShadow"/>
+              <svg className="h-[5.2rem] sm:h-[5.8rem] w-auto drop-shadow-[0_10px_20px_rgba(0,0,0,0.55)] group-hover:drop-shadow-[0_12px_24px_rgba(0,0,0,0.65)] transition-all duration-300" viewBox="0 0 96 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="jarLidMetal" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#f0ca6a" />
+                    <stop offset="45%" stopColor="#c49532" />
+                    <stop offset="100%" stopColor="#8f6718" />
+                  </linearGradient>
+                  <linearGradient id="jarGlass" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="rgba(255,255,255,0.28)" />
+                    <stop offset="38%" stopColor="rgba(255,255,255,0.08)" />
+                    <stop offset="100%" stopColor="rgba(255,255,255,0.2)" />
+                  </linearGradient>
+                  <linearGradient id="jarCoin" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#ffd86f" />
+                    <stop offset="100%" stopColor="#c28a1f" />
+                  </linearGradient>
+                </defs>
 
-                      <feGaussianBlur in="inverse" stdDeviation="0.8" result="blur2"/>
-                      <feOffset in="blur2" dx="0" dy="-1" result="offsetBlur2"/>
-                      <feFlood floodColor="rgb(80, 7, 7)" floodOpacity="0.7" result="color2"/>
-                      <feComposite in="color2" in2="offsetBlur2" operator="in" result="shadow2"/>
-                      <feComposite in="shadow2" in2="SourceAlpha" operator="in" result="innerShadow2"/>
+                <rect x="30" y="2.5" width="36" height="5" rx="1.5" fill="url(#jarLidMetal)" stroke="#7a5610" strokeWidth="1" />
+                <rect x="26" y="8" width="44" height="9" rx="2.5" fill="url(#jarLidMetal)" stroke="#7a5610" strokeWidth="1" />
+                <line x1="30" y1="11.5" x2="66" y2="11.5" stroke="#e8bc58" strokeWidth="0.9" opacity="0.65" />
+                <line x1="29" y1="14.4" x2="67" y2="14.4" stroke="#6f4e14" strokeWidth="0.7" opacity="0.45" />
 
-                      <feMerge>
-                        <feMergeNode in="SourceGraphic"/>
-                        <feMergeNode in="innerShadow"/>
-                        <feMergeNode in="innerShadow2"/>
-                      </feMerge>
-                    </filter>
-                  </defs>
-                  <path
-                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-                    fill="#dc2626"
-                    filter="url(#heartInnerShadow)"
-                  />
-                </svg>
-              </div>
-              <span className="hidden sm:inline relative z-10">Donate</span>
-            </Button>
+                <path
+                  d="M26 17 Q26 25 13 31 L13 101 Q13 119 31 119 L65 119 Q83 119 83 101 L83 31 Q70 25 70 17 Z"
+                  fill="url(#jarGlass)"
+                  stroke="rgba(255,255,255,0.55)"
+                  strokeWidth="1.5"
+                />
+
+                <path d="M19 33 L23 33 L23 100 Q23 109 29 112 L19 112 L19 33 Z" fill="rgba(255,255,255,0.12)" />
+
+                <ellipse cx="39" cy="104" rx="9.5" ry="3.1" fill="url(#jarCoin)" opacity="0.9" />
+                <ellipse cx="54.5" cy="105" rx="8.5" ry="2.8" fill="url(#jarCoin)" opacity="0.78" />
+                <ellipse cx="48" cy="99.5" rx="10" ry="3.1" fill="url(#jarCoin)" opacity="0.85" />
+
+                <rect x="24" y="54" width="48" height="28" rx="8" fill="rgba(0,0,0,0.35)" />
+                <text x="48" y="65" textAnchor="middle" fill="#fff0c7" fontSize="8.5" fontWeight="700" letterSpacing="0.5" stroke="rgba(0,0,0,0.6)" strokeWidth="0.5">Just the</text>
+                <text x="48" y="77" textAnchor="middle" fill="white" fontSize="11" fontWeight="800" letterSpacing="0.35" stroke="rgba(0,0,0,0.7)" strokeWidth="0.6">Tipp jar</text>
+              </svg>
+            </button>
           </div>
         </div>
       </motion.nav>
