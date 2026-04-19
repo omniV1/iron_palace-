@@ -11,8 +11,6 @@ export interface YouTubeVideo {
 
 const CHANNEL_ID = "UC9tV0Z2xN1HtvQu5F-ERqpg";
 const RSS_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`;
-/** Vite dev/preview proxy — same-origin, avoids flaky public CORS proxies locally */
-const DEV_RSS_PATH = "/api/youtube-feed";
 const CORS_PROXIES = [
   "https://api.allorigins.win/raw?url=",
   "https://corsproxy.io/?url=",
@@ -20,6 +18,8 @@ const CORS_PROXIES = [
   "https://thingproxy.freeboard.io/fetch/",
 ];
 const FETCH_TIMEOUT_MS = 5000;
+/** Serverless cold start + YouTube latency */
+const SAME_ORIGIN_RSS_TIMEOUT_MS = 20000;
 const CACHE_KEY = "ipp_yt_videos";
 const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 
@@ -115,9 +115,9 @@ export function useYouTubeVideos(maxResults = 15) {
   useEffect(() => {
     let cancelled = false;
 
-    async function fetchWithTimeout(url: string) {
+    async function fetchWithTimeout(url: string, timeoutMs = FETCH_TIMEOUT_MS) {
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
       try {
         return await fetch(url, { signal: controller.signal });
       } finally {
@@ -135,8 +135,8 @@ export function useYouTubeVideos(maxResults = 15) {
         }
       };
 
-      const tryFetchRss = async (url: string) => {
-        const res = await fetchWithTimeout(url);
+      const tryFetchRss = async (url: string, timeoutMs = FETCH_TIMEOUT_MS) => {
+        const res = await fetchWithTimeout(url, timeoutMs);
         if (!res.ok) return false;
         const xml = await res.text();
         if (!xml.includes("<entry>")) return false;
@@ -162,10 +162,11 @@ export function useYouTubeVideos(maxResults = 15) {
         /* fall through */
       }
 
-      // 2) Vite dev / preview proxy (no CORS)
+      // 2) Same-origin RSS proxy (Vite dev server + Vercel `api/youtube-feed.js` — no browser CORS)
       if (cancelled) return;
       try {
-        if (await tryFetchRss(DEV_RSS_PATH)) return;
+        const sameOriginRssUrl = `${import.meta.env.BASE_URL}api/youtube-feed`;
+        if (await tryFetchRss(sameOriginRssUrl, SAME_ORIGIN_RSS_TIMEOUT_MS)) return;
       } catch {
         /* fall through */
       }
