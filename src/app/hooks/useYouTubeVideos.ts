@@ -11,6 +11,8 @@ export interface YouTubeVideo {
 
 const CHANNEL_ID = "UC9tV0Z2xN1HtvQu5F-ERqpg";
 const RSS_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`;
+/** Vite dev/preview proxy — same-origin, avoids flaky public CORS proxies locally */
+const DEV_RSS_PATH = "/api/youtube-feed";
 const CORS_PROXIES = [
   "https://api.allorigins.win/raw?url=",
   "https://corsproxy.io/?url=",
@@ -24,6 +26,13 @@ const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 interface CacheEntry {
   videos: YouTubeVideo[];
   timestamp: number;
+}
+
+/** Written by scripts/fetch-youtube-feed.mjs at build time */
+interface StaticFeedFile {
+  channelId: string;
+  fetchedAt: string;
+  videos: YouTubeVideo[];
 }
 
 function readCache(): YouTubeVideo[] | null {
@@ -117,22 +126,55 @@ export function useYouTubeVideos(maxResults = 15) {
     }
 
     async function fetchVideos() {
+      const applyVideos = (parsed: YouTubeVideo[]) => {
+        writeCache(parsed);
+        if (!cancelled) {
+          setVideos(parsed.slice(0, maxResults));
+          setError(null);
+          setLoading(false);
+        }
+      };
+
+      const tryFetchRss = async (url: string) => {
+        const res = await fetchWithTimeout(url);
+        if (!res.ok) return false;
+        const xml = await res.text();
+        if (!xml.includes("<entry>")) return false;
+        const parsed = parseRSS(xml);
+        if (parsed.length === 0) return false;
+        applyVideos(parsed);
+        return true;
+      };
+
+      // 1) Built-in snapshot (reliable in production — generated during npm run build)
+      if (cancelled) return;
+      try {
+        const jsonUrl = `${import.meta.env.BASE_URL}youtube-videos.json`;
+        const res = await fetchWithTimeout(jsonUrl);
+        if (res.ok) {
+          const data = (await res.json()) as StaticFeedFile;
+          if (Array.isArray(data.videos) && data.videos.length > 0) {
+            applyVideos(data.videos);
+            return;
+          }
+        }
+      } catch {
+        /* fall through */
+      }
+
+      // 2) Vite dev / preview proxy (no CORS)
+      if (cancelled) return;
+      try {
+        if (await tryFetchRss(DEV_RSS_PATH)) return;
+      } catch {
+        /* fall through */
+      }
+
+      // 3) Public CORS proxies (fallback e.g. dev without prior build, or old deploys)
       for (const proxy of CORS_PROXIES) {
         if (cancelled) return;
         try {
-          const res = await fetchWithTimeout(proxy + encodeURIComponent(RSS_URL));
-          if (!res.ok) continue;
-          const xml = await res.text();
-          if (!xml.includes("<entry>")) continue;
-          const parsed = parseRSS(xml);
-          if (parsed.length === 0) continue;
-          writeCache(parsed);
-          if (!cancelled) {
-            setVideos(parsed.slice(0, maxResults));
-            setError(null);
-            setLoading(false);
-          }
-          return;
+          if (await tryFetchRss(proxy + encodeURIComponent(RSS_URL))) return;
         } catch {
           continue;
         }

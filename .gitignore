@@ -1,4 +1,6 @@
 target/
+# Generated at build by scripts/fetch-youtube-feed.mjs
+public/youtube-videos.json
 *.class
 *.jar
 !.mvn/wrapper/*.jar

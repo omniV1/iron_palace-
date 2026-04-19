@@ -334,77 +334,78 @@ export default function App() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="mb-12 flex w-full flex-col items-center text-center"
           >
             <h2 className="text-3xl md:text-4xl font-light tracking-wide uppercase mb-4">Recent Episodes</h2>
-            <p className="text-zinc-400 text-sm">Catch up on what you missed</p>
+            <p className="text-zinc-400 text-sm max-w-xl">Catch up on what you missed</p>
           </motion.div>
 
           {videosLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="animate-pulse">
-                  <div className="aspect-video bg-zinc-800 rounded-xl mb-3" />
-                  <div className="h-4 bg-zinc-800 rounded w-3/4 mb-2" />
-                  <div className="h-3 bg-zinc-800 rounded w-1/2" />
-                </div>
-              ))}
-            </div>
-          ) : videos.length <= 1 || videosError ? (
-            <div className="max-w-2xl mx-auto text-center py-8">
-              <div className="rounded-2xl border border-white/12 bg-zinc-900/75 backdrop-blur-sm p-4 sm:p-5 shadow-[0_20px_60px_rgba(0,0,0,0.6)] mb-6">
-                <div className="relative rounded-xl border border-white/12 bg-black/35 p-1.5">
-                  <div className="pointer-events-none absolute left-3 right-3 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/45 to-transparent"></div>
-                  <div className="relative aspect-video overflow-hidden rounded-lg shadow-[0_14px_38px_rgba(0,0,0,0.55)]">
-                    <iframe
-                      className="absolute inset-0 h-full w-full"
-                      src="https://www.youtube.com/embed/videoseries?list=UU9tV0Z2xN1HtvQu5F-ERqpg&index=1&playsinline=1"
-                      title="Iron Palace Podcast Videos"
-                      frameBorder="0"
-                      loading="lazy"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      allowFullScreen
-                    />
+            <div className="overflow-x-auto pb-2 [scrollbar-width:thin]">
+              <div className="flex w-max max-w-full mx-auto gap-5 snap-x snap-mandatory">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="w-[min(85vw,300px)] flex-shrink-0 snap-start animate-pulse"
+                  >
+                    <div className="aspect-video bg-zinc-800 rounded-xl mb-3" />
+                    <div className="h-4 bg-zinc-800 rounded w-3/4 mb-2" />
+                    <div className="h-3 bg-zinc-800 rounded w-1/2" />
                   </div>
-                </div>
+                ))}
               </div>
-              <p className="text-zinc-400 text-sm">
-                Browse all episodes directly on our YouTube channel
+            </div>
+          ) : videosError || videos.length <= 1 ? (
+            <div className="max-w-lg mx-auto text-center py-8 px-4">
+              <p className="text-zinc-400 text-sm mb-4">
+                {videosError
+                  ? "We couldn’t load the episode list right now."
+                  : "More episodes will show here once additional uploads are available."}
               </p>
+              <a
+                href="https://www.youtube.com/@TheIronPalacePodcast"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-amber-400/90 hover:text-amber-300 underline underline-offset-2"
+              >
+                Browse all episodes on YouTube
+              </a>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-              {videos.slice(1, 4).map((video, index) => (
-                <motion.div
-                  key={video.videoId}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  whileHover={{ y: -4, scale: 1.02 }}
-                  className="group cursor-pointer active:scale-[0.98] transition-transform"
-                  onClick={() => setActiveVideoId(video.videoId)}
-                >
-                  <div className="relative aspect-video rounded-xl overflow-hidden ring-1 ring-white/10 shadow-lg shadow-black/40 mb-3">
-                    <img
-                      src={video.thumbnail}
-                      alt={video.title}
-                      loading="lazy"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute inset-0 bg-black/20 sm:bg-black/0 group-hover:bg-black/40 transition-colors duration-300 flex items-center justify-center">
-                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-red-600/90 flex items-center justify-center opacity-80 sm:opacity-0 group-hover:opacity-100 scale-90 sm:scale-75 group-hover:scale-100 transition-all duration-300 shadow-lg">
-                        <Play className="w-5 h-5 sm:w-6 sm:h-6 text-white ml-0.5" fill="white" />
+            <div className="overflow-x-auto pb-2 [scrollbar-width:thin]">
+              <div className="flex w-max max-w-full mx-auto gap-5 snap-x snap-mandatory pb-1">
+                {videos.slice(1, 4).map((video, index) => (
+                  <motion.div
+                    key={video.videoId}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    whileHover={{ y: -2 }}
+                    className="group w-[min(85vw,300px)] flex-shrink-0 snap-start cursor-pointer active:scale-[0.99] transition-transform text-left"
+                    onClick={() => setActiveVideoId(video.videoId)}
+                  >
+                    <div className="relative aspect-video rounded-xl overflow-hidden ring-1 ring-white/10 shadow-lg shadow-black/40 mb-3">
+                      <img
+                        src={video.thumbnail}
+                        alt={video.title}
+                        loading="lazy"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-black/20 sm:bg-black/0 group-hover:bg-black/40 transition-colors duration-300 flex items-center justify-center">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-red-600/90 flex items-center justify-center opacity-80 sm:opacity-0 group-hover:opacity-100 scale-90 sm:scale-75 group-hover:scale-100 transition-all duration-300 shadow-lg">
+                          <Play className="w-5 h-5 sm:w-6 sm:h-6 text-white ml-0.5" fill="white" />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <h3 className="text-sm font-medium line-clamp-2 group-hover:text-amber-400 transition-colors duration-200">
-                    {video.title}
-                  </h3>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    {video.views.toLocaleString()} views &middot; {timeAgo(video.published)}
-                  </p>
-                </motion.div>
-              ))}
+                    <h3 className="text-sm font-medium line-clamp-2 group-hover:text-amber-400 transition-colors duration-200">
+                      {video.title}
+                    </h3>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      {video.views.toLocaleString()} views &middot; {timeAgo(video.published)}
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
             </div>
           )}
 
