@@ -94,7 +94,6 @@ const upcomingEvents = [
 ];
 
 export default function App() {
-  const [donateOpen, setDonateOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [currentPhoto, setCurrentPhoto] = useState(0);
   const [hoveredCrew, setHoveredCrew] = useState<number | null>(null);
@@ -203,52 +202,6 @@ export default function App() {
               </a>
             </div>
 
-            <button
-              onClick={() => setDonateOpen(true)}
-              className="relative shrink-0 group transition-transform duration-300 hover:scale-105 active:scale-95"
-              aria-label="Donate - Just the TIPP Jar"
-            >
-              <svg className="h-[5.2rem] sm:h-[5.8rem] w-auto drop-shadow-[0_10px_20px_rgba(0,0,0,0.55)] group-hover:drop-shadow-[0_12px_24px_rgba(0,0,0,0.65)] transition-all duration-300" viewBox="0 0 96 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                  <linearGradient id="jarLidMetal" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#f0ca6a" />
-                    <stop offset="45%" stopColor="#c49532" />
-                    <stop offset="100%" stopColor="#8f6718" />
-                  </linearGradient>
-                  <linearGradient id="jarGlass" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="rgba(255,255,255,0.28)" />
-                    <stop offset="38%" stopColor="rgba(255,255,255,0.08)" />
-                    <stop offset="100%" stopColor="rgba(255,255,255,0.2)" />
-                  </linearGradient>
-                  <linearGradient id="jarCoin" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#ffd86f" />
-                    <stop offset="100%" stopColor="#c28a1f" />
-                  </linearGradient>
-                </defs>
-
-                <rect x="30" y="2.5" width="36" height="5" rx="1.5" fill="url(#jarLidMetal)" stroke="#7a5610" strokeWidth="1" />
-                <rect x="26" y="8" width="44" height="9" rx="2.5" fill="url(#jarLidMetal)" stroke="#7a5610" strokeWidth="1" />
-                <line x1="30" y1="11.5" x2="66" y2="11.5" stroke="#e8bc58" strokeWidth="0.9" opacity="0.65" />
-                <line x1="29" y1="14.4" x2="67" y2="14.4" stroke="#6f4e14" strokeWidth="0.7" opacity="0.45" />
-
-                <path
-                  d="M26 17 Q26 25 13 31 L13 101 Q13 119 31 119 L65 119 Q83 119 83 101 L83 31 Q70 25 70 17 Z"
-                  fill="url(#jarGlass)"
-                  stroke="rgba(255,255,255,0.55)"
-                  strokeWidth="1.5"
-                />
-
-                <path d="M19 33 L23 33 L23 100 Q23 109 29 112 L19 112 L19 33 Z" fill="rgba(255,255,255,0.12)" />
-
-                <ellipse cx="39" cy="104" rx="9.5" ry="3.1" fill="url(#jarCoin)" opacity="0.9" />
-                <ellipse cx="54.5" cy="105" rx="8.5" ry="2.8" fill="url(#jarCoin)" opacity="0.78" />
-                <ellipse cx="48" cy="99.5" rx="10" ry="3.1" fill="url(#jarCoin)" opacity="0.85" />
-
-                <rect x="24" y="54" width="48" height="28" rx="8" fill="rgba(0,0,0,0.35)" />
-                <text x="48" y="65" textAnchor="middle" fill="#fff0c7" fontSize="8.5" fontWeight="700" letterSpacing="0.5" stroke="rgba(0,0,0,0.6)" strokeWidth="0.5">Just the</text>
-                <text x="48" y="77" textAnchor="middle" fill="white" fontSize="11" fontWeight="800" letterSpacing="0.35" stroke="rgba(0,0,0,0.7)" strokeWidth="0.6">Tipp jar</text>
-              </svg>
-            </button>
           </div>
         </div>
       </motion.nav>
@@ -266,7 +219,7 @@ export default function App() {
           <Button
             onClick={() => setContactOpen(true)}
             variant="outline"
-            className="border-white/20 bg-black/30 backdrop-blur-md text-white shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:bg-white/10 hover:text-amber-400 hover:border-amber-500/40 transition-all duration-300 rounded-full px-3 py-1.5 h-auto text-[10px] sm:text-xs uppercase tracking-wider"
+            className="border-amber-500/45 bg-amber-500/10 backdrop-blur-md text-amber-200 shadow-[0_8px_24px_rgba(0,0,0,0.35)] hover:bg-amber-500/18 hover:text-amber-50 hover:border-amber-400/50 active:scale-[0.98] transition-all duration-300 rounded-full px-3 py-1.5 h-auto text-[10px] sm:text-xs uppercase tracking-wider font-medium"
           >
             Inquire
           </Button>
@@ -338,17 +291,22 @@ export default function App() {
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="relative aspect-video max-w-5xl mx-auto rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.6)] ring-1 ring-white/10 group"
+            className="max-w-5xl mx-auto rounded-2xl border border-white/12 bg-zinc-900/75 backdrop-blur-sm p-4 sm:p-5 shadow-[0_24px_70px_rgba(0,0,0,0.65)]"
           >
-            <iframe
-              className="absolute inset-0 w-full h-full"
-              src="https://www.youtube.com/embed/videoseries?list=UU9tV0Z2xN1HtvQu5F-ERqpg&playsinline=1"
-              title="Latest YouTube Video"
-              frameBorder="0"
-              loading="lazy"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-            />
+            <div className="relative rounded-xl border border-white/12 bg-black/35 p-1.5">
+              <div className="pointer-events-none absolute left-3 right-3 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/45 to-transparent"></div>
+              <div className="relative aspect-video overflow-hidden rounded-lg shadow-[0_14px_38px_rgba(0,0,0,0.55)]">
+                <iframe
+                  className="absolute inset-0 h-full w-full"
+                  src="https://www.youtube.com/embed/videoseries?list=UU9tV0Z2xN1HtvQu5F-ERqpg&playsinline=1"
+                  title="Latest YouTube Video"
+                  frameBorder="0"
+                  loading="lazy"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              </div>
+            </div>
           </motion.div>
 
           <div className="text-center mt-8">
@@ -394,16 +352,21 @@ export default function App() {
             </div>
           ) : videos.length <= 1 || videosError ? (
             <div className="max-w-2xl mx-auto text-center py-8">
-              <div className="aspect-video rounded-2xl overflow-hidden ring-1 ring-white/10 shadow-lg mb-6">
-                <iframe
-                  className="w-full h-full"
-                  src="https://www.youtube.com/embed/videoseries?list=UU9tV0Z2xN1HtvQu5F-ERqpg&index=1&playsinline=1"
-                  title="Iron Palace Podcast Videos"
-                  frameBorder="0"
-                  loading="lazy"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                />
+              <div className="rounded-2xl border border-white/12 bg-zinc-900/75 backdrop-blur-sm p-4 sm:p-5 shadow-[0_20px_60px_rgba(0,0,0,0.6)] mb-6">
+                <div className="relative rounded-xl border border-white/12 bg-black/35 p-1.5">
+                  <div className="pointer-events-none absolute left-3 right-3 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/45 to-transparent"></div>
+                  <div className="relative aspect-video overflow-hidden rounded-lg shadow-[0_14px_38px_rgba(0,0,0,0.55)]">
+                    <iframe
+                      className="absolute inset-0 h-full w-full"
+                      src="https://www.youtube.com/embed/videoseries?list=UU9tV0Z2xN1HtvQu5F-ERqpg&index=1&playsinline=1"
+                      title="Iron Palace Podcast Videos"
+                      frameBorder="0"
+                      loading="lazy"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                    />
+                  </div>
+                </div>
               </div>
               <p className="text-zinc-400 text-sm">
                 Browse all episodes directly on our YouTube channel
@@ -445,21 +408,6 @@ export default function App() {
             </div>
           )}
 
-          <div className="text-center mt-10">
-            <a
-              href="https://www.youtube.com/@TheIronPalacePodcast"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block"
-            >
-              <Button className="relative bg-gradient-to-br from-amber-600 via-amber-600 to-amber-700 hover:from-amber-500 hover:via-amber-500 hover:to-amber-600 text-white font-medium px-5 py-3 rounded-lg shadow-lg shadow-amber-900/50 hover:shadow-xl hover:shadow-amber-900/60 hover:scale-105 transition-all duration-300 border border-amber-500/50 overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-b from-amber-400/60 via-transparent to-amber-950/70"></div>
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_0%,rgba(255,250,200,0.8),transparent_40%)]"></div>
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_100%,rgba(113,63,18,0.6),transparent_40%)]"></div>
-                <span className="relative z-10">View All on YouTube</span>
-              </Button>
-            </a>
-          </div>
         </div>
       </section>
 
@@ -601,6 +549,60 @@ export default function App() {
                 <span className="relative z-10">Shop All</span>
               </Button>
             </a>
+
+            <div className="mt-5">
+              <a
+                href="https://venmo.com/Caleb-Day-10?txn=pay&note=Iron%20Palace%20Podcast%20Donation"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative group transition-transform duration-300 hover:scale-105 active:scale-95"
+                aria-label="Just the TIPP Jar"
+              >
+                <svg className="h-[5.2rem] sm:h-[5.8rem] w-auto mx-auto drop-shadow-[0_10px_20px_rgba(0,0,0,0.55)] group-hover:drop-shadow-[0_12px_24px_rgba(0,0,0,0.65)] transition-all duration-300" viewBox="0 0 96 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="shirtJarLidMetal" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#f0ca6a" />
+                      <stop offset="45%" stopColor="#c49532" />
+                      <stop offset="100%" stopColor="#8f6718" />
+                    </linearGradient>
+                    <linearGradient id="shirtJarGlass" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="rgba(255,255,255,0.28)" />
+                      <stop offset="38%" stopColor="rgba(255,255,255,0.08)" />
+                      <stop offset="100%" stopColor="rgba(255,255,255,0.2)" />
+                    </linearGradient>
+                    <linearGradient id="shirtJarCoin" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#ffd86f" />
+                      <stop offset="100%" stopColor="#c28a1f" />
+                    </linearGradient>
+                  </defs>
+
+                  <rect x="30" y="2.5" width="36" height="5" rx="1.5" fill="url(#shirtJarLidMetal)" stroke="#7a5610" strokeWidth="1" />
+                  <rect x="26" y="8" width="44" height="9" rx="2.5" fill="url(#shirtJarLidMetal)" stroke="#7a5610" strokeWidth="1" />
+                  <line x1="30" y1="11.5" x2="66" y2="11.5" stroke="#e8bc58" strokeWidth="0.9" opacity="0.65" />
+                  <line x1="29" y1="14.4" x2="67" y2="14.4" stroke="#6f4e14" strokeWidth="0.7" opacity="0.45" />
+
+                  <path
+                    d="M26 17 Q26 25 13 31 L13 101 Q13 119 31 119 L65 119 Q83 119 83 101 L83 31 Q70 25 70 17 Z"
+                    fill="url(#shirtJarGlass)"
+                    stroke="rgba(255,255,255,0.55)"
+                    strokeWidth="1.5"
+                  />
+
+                  <path d="M19 33 L23 33 L23 100 Q23 109 29 112 L19 112 L19 33 Z" fill="rgba(255,255,255,0.12)" />
+
+                  <ellipse cx="39" cy="104" rx="9.5" ry="3.1" fill="url(#shirtJarCoin)" opacity="0.9" />
+                  <ellipse cx="54.5" cy="105" rx="8.5" ry="2.8" fill="url(#shirtJarCoin)" opacity="0.78" />
+                  <ellipse cx="48" cy="99.5" rx="10" ry="3.1" fill="url(#shirtJarCoin)" opacity="0.85" />
+
+                  <rect x="24" y="54" width="48" height="28" rx="8" fill="rgba(0,0,0,0.35)" />
+                  <text x="48" y="65" textAnchor="middle" fill="#fff0c7" fontSize="8.5" fontWeight="700" letterSpacing="0.5" stroke="rgba(0,0,0,0.6)" strokeWidth="0.5">Just the</text>
+                  <text x="48" y="77" textAnchor="middle" fill="white" fontSize="11" fontWeight="800" letterSpacing="0.35" stroke="rgba(0,0,0,0.7)" strokeWidth="0.6">TIPP Jar</text>
+                </svg>
+              </a>
+              <p className="mt-2 text-[10px] sm:text-xs text-zinc-400 uppercase tracking-wider">
+                Like the show? Toss a tip in the jar.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -832,53 +834,6 @@ export default function App() {
           </div>
         </div>
       </footer>
-
-      {/* Donate Dialog */}
-      <Dialog open={donateOpen} onOpenChange={setDonateOpen}>
-        <DialogContent className="bg-black/95 backdrop-blur-xl border-white/20 text-white shadow-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-2xl">Support The Iron Palace</DialogTitle>
-            <DialogDescription className="text-zinc-400">
-              Your support helps us keep the podcast running and deliver quality content every week.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <p className="text-sm text-zinc-300">
-              We appreciate every donation, no matter the size. Your contributions go towards equipment, editing, and making the show better for you!
-            </p>
-            <div className="grid grid-cols-2 gap-4">
-              <a href="https://venmo.com/Caleb-Day-10?txn=pay&amount=5&note=Iron%20Palace%20Podcast%20Donation" target="_blank" rel="noopener noreferrer" className="block">
-                <Button className="w-full relative bg-gradient-to-br from-amber-600 via-amber-600 to-amber-700 hover:from-amber-500 hover:via-amber-500 hover:to-amber-600 text-white border border-amber-500/50 py-6 overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-b from-amber-400/60 via-transparent to-amber-950/70"></div>
-                  <span className="relative z-10">Donate $5</span>
-                </Button>
-              </a>
-              <a href="https://venmo.com/Caleb-Day-10?txn=pay&amount=10&note=Iron%20Palace%20Podcast%20Donation" target="_blank" rel="noopener noreferrer" className="block">
-                <Button className="w-full relative bg-gradient-to-br from-amber-600 via-amber-600 to-amber-700 hover:from-amber-500 hover:via-amber-500 hover:to-amber-600 text-white border border-amber-500/50 py-6 overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-b from-amber-400/60 via-transparent to-amber-950/70"></div>
-                  <span className="relative z-10">Donate $10</span>
-                </Button>
-              </a>
-              <a href="https://venmo.com/Caleb-Day-10?txn=pay&amount=25&note=Iron%20Palace%20Podcast%20Donation" target="_blank" rel="noopener noreferrer" className="block">
-                <Button className="w-full relative bg-gradient-to-br from-amber-600 via-amber-600 to-amber-700 hover:from-amber-500 hover:via-amber-500 hover:to-amber-600 text-white border border-amber-500/50 py-6 overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-b from-amber-400/60 via-transparent to-amber-950/70"></div>
-                  <span className="relative z-10">Donate $25</span>
-                </Button>
-              </a>
-              <a href="https://venmo.com/Caleb-Day-10?txn=pay&note=Iron%20Palace%20Podcast%20Donation" target="_blank" rel="noopener noreferrer" className="block">
-                <Button className="w-full relative bg-gradient-to-br from-amber-600 via-amber-600 to-amber-700 hover:from-amber-500 hover:via-amber-500 hover:to-amber-600 text-white border border-amber-500/50 py-6 overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-b from-amber-400/60 via-transparent to-amber-950/70"></div>
-                  <span className="relative z-10">Custom Amount</span>
-                </Button>
-              </a>
-            </div>
-            <p className="text-xs text-zinc-500 text-center pt-4 flex items-center justify-center gap-1.5">
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M19.1 3.5c.8 1.3 1.2 2.7 1.2 4.3 0 3.4-2.3 7.3-4.2 10.2H10L8.5 3.8l5-.5.9 7.1c.8-1.4 1.8-3.5 1.8-5 0-1.5-.4-2.5-.9-3.3l3.8-1.6z"/></svg>
-              Powered by Venmo &middot; @Caleb-Day-10
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Contact Dialog */}
       <Dialog open={contactOpen} onOpenChange={setContactOpen}>
