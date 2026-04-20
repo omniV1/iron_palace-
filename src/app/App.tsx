@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Calendar, ChevronLeft, ChevronRight, Facebook, Instagram, Play, X } from "lucide-react";
 import { Button } from "./components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./components/ui/dialog";
 import { useYouTubeVideos, timeAgo } from "./hooks/useYouTubeVideos";
 
 import imgMerchDragon from "../imports/Group2/9fe969f07b1189f5a7e8d627018c5bf063261cab.png?w=800&format=webp&quality=80";
@@ -94,7 +93,6 @@ const upcomingEvents = [
 ];
 
 export default function App() {
-  const [contactOpen, setContactOpen] = useState(false);
   const [currentPhoto, setCurrentPhoto] = useState(0);
   const [hoveredCrew, setHoveredCrew] = useState<number | null>(null);
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
@@ -119,7 +117,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white pb-[calc(4rem+env(safe-area-inset-bottom,0px))]">
+    <div className="min-h-screen bg-black text-white">
       {/* Navigation */}
       <motion.nav
         initial={{ y: -100 }}
@@ -205,26 +203,6 @@ export default function App() {
           </div>
         </div>
       </motion.nav>
-
-      {/* Fixed inquire bar — same glass treatment as header */}
-      <div
-        className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/20 bg-black/60 backdrop-blur-md shadow-[0_-8px_32px_rgba(0,0,0,0.3)] pb-[max(0.5rem,env(safe-area-inset-bottom))]"
-        role="region"
-        aria-label="Participation inquiry"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2.5 flex items-center justify-center gap-2 sm:gap-3">
-          <span className="hidden sm:inline text-xs font-light tracking-wide text-white/90">
-            Interested in Participating?
-          </span>
-          <Button
-            onClick={() => setContactOpen(true)}
-            variant="outline"
-            className="border-amber-500/45 bg-amber-500/10 backdrop-blur-md text-amber-200 shadow-[0_8px_24px_rgba(0,0,0,0.35)] hover:bg-amber-500/18 hover:text-amber-50 hover:border-amber-400/50 active:scale-[0.98] transition-all duration-300 rounded-full px-3 py-1.5 h-auto text-[10px] sm:text-xs uppercase tracking-wider font-medium"
-          >
-            Inquire
-          </Button>
-        </div>
-      </div>
 
       {/* Hero Section */}
       <section id="home" className="relative h-screen flex items-center justify-center overflow-hidden">
@@ -765,6 +743,28 @@ export default function App() {
           <div className="flex flex-col items-center gap-6">
             <img src={imgNewLogo} alt="Iron Palace Podcast" className="h-16 w-auto" loading="lazy" decoding="async" />
 
+            <p className="text-zinc-400 text-sm text-center max-w-md px-2">
+              Questions or want to get involved? Message us on{" "}
+              <a
+                href="https://www.facebook.com/p/The-Iron-Palace-Podcast-100095172626714/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-amber-500 hover:text-amber-400 underline underline-offset-2"
+              >
+                Facebook
+              </a>{" "}
+              or{" "}
+              <a
+                href="https://www.instagram.com/the_iron_palace_podcast/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-amber-500 hover:text-amber-400 underline underline-offset-2"
+              >
+                Instagram
+              </a>
+              .
+            </p>
+
             <div className="flex items-center gap-4">
               <a
                 href="https://www.facebook.com/p/The-Iron-Palace-Podcast-100095172626714/"
@@ -835,86 +835,6 @@ export default function App() {
           </div>
         </div>
       </footer>
-
-      {/* Contact Dialog */}
-      <Dialog open={contactOpen} onOpenChange={setContactOpen}>
-        <DialogContent className="bg-black/80 backdrop-blur-2xl border-white/30 text-white shadow-2xl max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-xl md:text-2xl font-light tracking-wide">Get In Touch</DialogTitle>
-            <DialogDescription className="text-zinc-400 text-sm">
-              We'd love to hear from you. Fill out the form below and we'll get back to you as soon as possible.
-            </DialogDescription>
-          </DialogHeader>
-          <form
-            className="space-y-4 py-3"
-            onSubmit={(e) => {
-              e.preventDefault();
-            }}
-          >
-            <div className="space-y-1.5">
-              <label htmlFor="name" className="text-xs font-light text-zinc-300">Name</label>
-              <input
-                id="name"
-                type="text"
-                className="w-full px-3 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all text-sm"
-                placeholder="Your name"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label htmlFor="email" className="text-xs font-light text-zinc-300">Email</label>
-              <input
-                id="email"
-                type="email"
-                className="w-full px-3 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all text-sm"
-                placeholder="your.email@example.com"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label htmlFor="inquiry" className="text-xs font-light text-zinc-300">I'm interested in...</label>
-              <select
-                id="inquiry"
-                className="w-full px-3 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all appearance-none cursor-pointer text-sm"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 0.75rem center',
-                  backgroundSize: '1.25rem'
-                }}
-              >
-                <option value="" className="bg-zinc-900">Select an option</option>
-                <option value="guest" className="bg-zinc-900">Being a podcast guest</option>
-                <option value="event-signup" className="bg-zinc-900">Signing up for an existing event</option>
-                <option value="event-host" className="bg-zinc-900">Inviting Iron Palace to host a future event</option>
-              </select>
-            </div>
-
-            <div className="space-y-1.5">
-              <label htmlFor="message" className="text-xs font-light text-zinc-300">Message</label>
-              <textarea
-                id="message"
-                rows={4}
-                className="w-full px-3 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all resize-none text-sm"
-                placeholder="Tell us more about your inquiry..."
-              />
-            </div>
-
-            <Button
-              type="submit"
-              className="w-full relative bg-gradient-to-br from-amber-600 via-amber-600 to-amber-700 hover:from-amber-500 hover:via-amber-500 hover:to-amber-600 text-white border border-amber-500/50 py-3 overflow-hidden shadow-lg hover:shadow-xl transition-all"
-            >
-              <div className="absolute inset-0 bg-gradient-to-b from-amber-400/60 via-transparent to-amber-950/70"></div>
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_0%,rgba(255,250,200,0.8),transparent_40%)]"></div>
-              <span className="relative z-10 font-medium uppercase tracking-wide text-sm">Send Message</span>
-            </Button>
-
-            <p className="text-[10px] text-zinc-500 text-center pt-1">
-              This is a demo form. Connect your backend to enable message submission.
-            </p>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
