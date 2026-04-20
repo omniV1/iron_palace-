@@ -52,34 +52,51 @@ function writeCache(videos: YouTubeVideo[]) {
   } catch { /* storage full */ }
 }
 
-function parseRSS(xml: string): YouTubeVideo[] {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(xml, "application/xml");
-  const entries = doc.querySelectorAll("entry");
+/**
+ * Mirrors `scripts/fetch-youtube-feed.mjs` — YouTube Atom uses namespaces (`yt:videoId`,
+ * `media:thumbnail`, etc.). DOMParser + querySelector("videoId") misses `yt:videoId`, so
+ * RSS fallbacks in the browser returned empty/wrong data while build-time JSON was fine.
+ */
+function parseYouTubeAtomXml(xml: string): YouTubeVideo[] {
   const videos: YouTubeVideo[] = [];
+  const chunks = xml.split("<entry>");
+  for (let i = 1; i < chunks.length; i++) {
+    const entry = chunks[i].split("</entry>")[0] ?? "";
+    let videoId =
+      entry.match(/<yt:videoId>([^<]*)<\/yt:videoId>/i)?.[1]?.trim() ??
+      entry.match(/<[^:]*:videoId>([^<]*)<\/[^:]*:videoId>/i)?.[1]?.trim();
+    if (!videoId) {
+      const idTag = entry.match(/<id>[^<]*:video:([^<]+)<\/id>/i);
+      videoId = idTag?.[1]?.trim() ?? "";
+    }
+    if (!videoId) continue;
 
-  entries.forEach((entry) => {
-    const videoId = entry.querySelector("videoId")?.textContent ?? "";
-    const title = entry.querySelector("title")?.textContent ?? "";
-    const published = entry.querySelector("published")?.textContent ?? "";
-    const thumbnail =
-      entry.querySelector("group > thumbnail")?.getAttribute("url") ??
+    const title =
+      entry.match(/<media:title>([^<]*)<\/media:title>/i)?.[1]?.trim() ??
+      entry.match(/<title>([^<]*)<\/title>/i)?.[1]?.trim() ??
+      "";
+
+    const published = entry.match(/<published>([^<]*)<\/published>/i)?.[1]?.trim() ?? "";
+
+    const thumbUrl =
+      entry.match(/<media:thumbnail[^>]*url="([^"]+)"/i)?.[1] ??
       `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+
     const description =
-      entry.querySelector("group > description")?.textContent ?? "";
-    const viewsStr =
-      entry.querySelector("group > community > statistics")?.getAttribute("views") ?? "0";
+      entry.match(/<media:description>([\s\S]*?)<\/media:description>/i)?.[1]?.trim() ?? "";
+
+    const viewsMatch = entry.match(/views="(\d+)"/i);
+    const views = viewsMatch ? parseInt(viewsMatch[1], 10) : 0;
 
     videos.push({
       videoId,
       title,
       published,
-      thumbnail,
+      thumbnail: thumbUrl,
       description,
-      views: parseInt(viewsStr, 10),
+      views: Number.isFinite(views) ? views : 0,
     });
-  });
-
+  }
   return videos;
 }
 
@@ -140,7 +157,7 @@ export function useYouTubeVideos(maxResults = 15) {
         if (!res.ok) return false;
         const xml = await res.text();
         if (!xml.includes("<entry>")) return false;
-        const parsed = parseRSS(xml);
+        const parsed = parseYouTubeAtomXml(xml);
         if (parsed.length === 0) return false;
         applyVideos(parsed);
         return true;
