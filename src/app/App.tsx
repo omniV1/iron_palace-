@@ -117,7 +117,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black text-white pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))]">
       {/* Navigation */}
       <motion.nav
         initial={{ y: -100 }}
@@ -203,6 +203,57 @@ export default function App() {
           </div>
         </div>
       </motion.nav>
+
+      {/* Sticky contact strip — follows viewport while scrolling */}
+      <div
+        className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/20 bg-black/60 backdrop-blur-md shadow-[0_-8px_32px_rgba(0,0,0,0.3)] pb-[max(0.5rem,env(safe-area-inset-bottom))]"
+        role="contentinfo"
+        aria-label="Contact"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-center">
+          <p className="text-zinc-300 text-[11px] sm:text-sm leading-snug max-w-xl">
+            Questions or want to get involved? Message us on{" "}
+            <a
+              href="https://www.facebook.com/p/The-Iron-Palace-Podcast-100095172626714/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-amber-500 hover:text-amber-400 underline underline-offset-2"
+            >
+              Facebook
+            </a>{" "}
+            or{" "}
+            <a
+              href="https://www.instagram.com/the_iron_palace_podcast/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-amber-500 hover:text-amber-400 underline underline-offset-2"
+            >
+              Instagram
+            </a>
+            .
+          </p>
+          <div className="flex items-center gap-3 shrink-0 sm:border-l sm:border-white/15 sm:pl-4">
+            <a
+              href="https://www.facebook.com/p/The-Iron-Palace-Podcast-100095172626714/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-zinc-400 hover:text-amber-500 transition-colors p-1"
+              aria-label="Facebook"
+            >
+              <Facebook className="w-5 h-5" />
+            </a>
+            <a
+              href="https://www.instagram.com/the_iron_palace_podcast/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-zinc-400 hover:text-amber-500 transition-colors p-1"
+              aria-label="Instagram"
+            >
+              <Instagram className="w-5 h-5" />
+            </a>
+          </div>
+        </div>
+      </div>
 
       {/* Hero Section */}
       <section id="home" className="relative h-screen flex items-center justify-center overflow-hidden">
@@ -738,32 +789,10 @@ export default function App() {
       </section>
 
       {/* Footer */}
-      <footer className="relative z-50 bg-black py-8 px-4 border-t border-white/10">
+      <footer className="relative z-10 bg-black py-8 px-4 border-t border-white/10">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col items-center gap-6">
             <img src={imgNewLogo} alt="Iron Palace Podcast" className="h-16 w-auto" loading="lazy" decoding="async" />
-
-            <p className="text-zinc-400 text-sm text-center max-w-md px-2">
-              Questions or want to get involved? Message us on{" "}
-              <a
-                href="https://www.facebook.com/p/The-Iron-Palace-Podcast-100095172626714/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-amber-500 hover:text-amber-400 underline underline-offset-2"
-              >
-                Facebook
-              </a>{" "}
-              or{" "}
-              <a
-                href="https://www.instagram.com/the_iron_palace_podcast/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-amber-500 hover:text-amber-400 underline underline-offset-2"
-              >
-                Instagram
-              </a>
-              .
-            </p>
 
             <div className="flex items-center gap-4">
               <a
