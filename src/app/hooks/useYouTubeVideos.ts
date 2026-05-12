@@ -11,12 +11,8 @@ export interface YouTubeVideo {
 
 const CHANNEL_ID = "UC9tV0Z2xN1HtvQu5F-ERqpg";
 const RSS_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`;
-const CORS_PROXIES = [
-  "https://api.allorigins.win/raw?url=",
-  "https://corsproxy.io/?url=",
-  "https://api.codetabs.com/v1/proxy/?quest=",
-  "https://thingproxy.freeboard.io/fetch/",
-];
+/** Last resort only — many public proxies block production referrers or are offline */
+const CORS_PROXIES = ["https://api.allorigins.win/raw?url="];
 const FETCH_TIMEOUT_MS = 5000;
 /** Serverless cold start + YouTube latency */
 const SAME_ORIGIN_RSS_TIMEOUT_MS = 20000;
@@ -179,11 +175,30 @@ export function useYouTubeVideos(maxResults = 15) {
         /* fall through */
       }
 
-      // 2) Same-origin RSS proxy (Vite dev server + Vercel `api/youtube-feed.js` — no browser CORS)
+      // 2) Same-origin API (Vite proxy RSS XML, or Vercel: RSS XML / JSON from Data API fallback)
       if (cancelled) return;
       try {
-        const sameOriginRssUrl = `${import.meta.env.BASE_URL}api/youtube-feed`;
-        if (await tryFetchRss(sameOriginRssUrl, SAME_ORIGIN_RSS_TIMEOUT_MS)) return;
+        const feedUrl = `${import.meta.env.BASE_URL}api/youtube-feed`;
+        const res = await fetchWithTimeout(feedUrl, SAME_ORIGIN_RSS_TIMEOUT_MS);
+        if (res.ok) {
+          const ct = res.headers.get("content-type") ?? "";
+          if (ct.includes("application/json")) {
+            const data = (await res.json()) as StaticFeedFile;
+            if (Array.isArray(data.videos) && data.videos.length > 0) {
+              applyVideos(data.videos);
+              return;
+            }
+          } else {
+            const xml = await res.text();
+            if (xml.includes("<entry>")) {
+              const parsed = parseYouTubeAtomXml(xml);
+              if (parsed.length > 0) {
+                applyVideos(parsed);
+                return;
+              }
+            }
+          }
+        }
       } catch {
         /* fall through */
       }
