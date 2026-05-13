@@ -1,31 +1,115 @@
-import { motion } from "motion/react";
-import { Calendar, MapPin, Clock, ArrowLeft } from "lucide-react";
+import { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { Calendar, MapPin, Clock, ArrowLeft, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useEvents } from "../hooks/useEvents";
 import imgNewLogo from "../../assets/feef32863d06775804f6af6bbe43f8df154b97b4.png?w=500&format=webp&quality=85";
 
-type GroupedEvents = { key: string; label: string; items: ReturnType<typeof useEvents>["events"] }[];
+type CalendarDay = {
+  date: Date;
+  dayOfMonth: number;
+  isCurrentMonth: boolean;
+  isToday: boolean;
+  events: ReturnType<typeof useEvents>["events"];
+};
 
-function groupByMonth(events: ReturnType<typeof useEvents>["events"]): GroupedEvents {
-  const map = new Map<string, ReturnType<typeof useEvents>["events"]>();
-  for (const e of events) {
-    const parsed = Date.parse(e.date);
-    const key = Number.isFinite(parsed)
-      ? new Date(parsed).toLocaleDateString("en-US", { year: "numeric", month: "long" })
-      : "Upcoming";
-    if (!map.has(key)) map.set(key, []);
-    map.get(key)!.push(e);
+function getDaysInMonth(year: number, month: number): CalendarDay[] {
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const daysInMonth = lastDay.getDate();
+  const startDayOfWeek = firstDay.getDay(); // 0 = Sunday
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const days: CalendarDay[] = [];
+  
+  // Previous month's trailing days
+  const prevMonthLastDay = new Date(year, month, 0).getDate();
+  for (let i = startDayOfWeek - 1; i >= 0; i--) {
+    const date = new Date(year, month - 1, prevMonthLastDay - i);
+    days.push({
+      date,
+      dayOfMonth: prevMonthLastDay - i,
+      isCurrentMonth: false,
+      isToday: date.getTime() === today.getTime(),
+      events: [],
+    });
   }
-  return Array.from(map.entries()).map(([key, items]) => ({ key, label: key, items }));
+  
+  // Current month's days
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = new Date(year, month, day);
+    days.push({
+      date,
+      dayOfMonth: day,
+      isCurrentMonth: true,
+      isToday: date.getTime() === today.getTime(),
+      events: [],
+    });
+  }
+  
+  // Next month's leading days to fill the grid
+  const remainingDays = 42 - days.length; // 6 rows × 7 days
+  for (let day = 1; day <= remainingDays; day++) {
+    const date = new Date(year, month + 1, day);
+    days.push({
+      date,
+      dayOfMonth: day,
+      isCurrentMonth: false,
+      isToday: date.getTime() === today.getTime(),
+      events: [],
+    });
+  }
+  
+  return days;
+}
+
+function matchEventToDate(event: ReturnType<typeof useEvents>["events"][0], date: Date): boolean {
+  const parsed = Date.parse(event.date);
+  if (!Number.isFinite(parsed)) return false;
+  const eventDate = new Date(parsed);
+  return (
+    eventDate.getFullYear() === date.getFullYear() &&
+    eventDate.getMonth() === date.getMonth() &&
+    eventDate.getDate() === date.getDate()
+  );
 }
 
 export default function CalendarPage() {
   const { events, loading, error } = useEvents();
-  const groups = groupByMonth(events);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDay, setSelectedDay] = useState<CalendarDay | null>(null);
+
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+
+  const monthName = currentDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+
+  const calendarDays = useMemo(() => {
+    const days = getDaysInMonth(year, month);
+    // Attach events to each day
+    days.forEach((day) => {
+      day.events = events.filter((event) => matchEventToDate(event, day.date));
+    });
+    return days;
+  }, [year, month, events]);
+
+  const prevMonth = () => {
+    setCurrentDate(new Date(year, month - 1, 1));
+    setSelectedDay(null);
+  };
+
+  const nextMonth = () => {
+    setCurrentDate(new Date(year, month + 1, 1));
+    setSelectedDay(null);
+  };
+
+  const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   return (
     <div className="min-h-screen bg-black text-white">
       <header className="border-b border-white/10 bg-black/80 backdrop-blur-md sticky top-0 z-40">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <a href="/" className="flex items-center gap-3 text-zinc-400 hover:text-amber-500 transition-colors">
             <ArrowLeft className="w-4 h-4" />
             <span className="text-xs uppercase tracking-wider">Back to site</span>
@@ -37,83 +121,161 @@ export default function CalendarPage() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
+          className="text-center mb-8"
         >
-          <h1 className="text-4xl md:text-5xl font-light tracking-wide uppercase mb-4">Events Calendar</h1>
-          <p className="text-zinc-400 text-sm">All upcoming Iron Palace events in one place</p>
+          <h1 className="text-3xl md:text-4xl font-light tracking-wide uppercase mb-2">Events Calendar</h1>
+          <p className="text-zinc-400 text-sm">Click any date to see events</p>
         </motion.div>
 
         {loading && <p className="text-zinc-400 text-sm text-center">Loading events…</p>}
         {error && <p className="text-red-400 text-sm text-center">Couldn't load events: {error}</p>}
 
-        {!loading && !error && events.length === 0 && (
-          <div className="text-center py-16">
-            <Calendar className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
-            <p className="text-zinc-500 text-sm">No upcoming events yet. Check back soon.</p>
-          </div>
-        )}
+        {!loading && !error && (
+          <>
+            {/* Calendar Header with Month Navigation */}
+            <div className="flex items-center justify-between mb-6 bg-zinc-900/60 backdrop-blur-md border border-white/10 rounded-2xl p-4">
+              <button
+                onClick={prevMonth}
+                className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+                aria-label="Previous month"
+              >
+                <ChevronLeft className="w-6 h-6 text-amber-500" />
+              </button>
+              <h2 className="text-xl md:text-2xl font-light tracking-wide uppercase">{monthName}</h2>
+              <button
+                onClick={nextMonth}
+                className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+                aria-label="Next month"
+              >
+                <ChevronRight className="w-6 h-6 text-amber-500" />
+              </button>
+            </div>
 
-        <div className="space-y-12">
-          {groups.map((group, gIdx) => (
-            <motion.section
-              key={group.key}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: gIdx * 0.05 }}
-            >
-              <h2 className="text-2xl font-light tracking-wide uppercase text-amber-500 mb-6 border-b border-amber-500/20 pb-2">
-                {group.label}
-              </h2>
-              <ul className="space-y-4">
-                {group.items.map((event, idx) => (
-                  <motion.li
-                    key={event.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: idx * 0.05 }}
-                    className="bg-zinc-900/60 backdrop-blur-md border border-white/10 rounded-2xl p-6 hover:border-amber-500/50 hover:bg-zinc-900/80 transition-colors"
+            {/* Calendar Grid */}
+            <div className="bg-zinc-900/60 backdrop-blur-md border border-white/10 rounded-2xl p-4 md:p-6 overflow-hidden">
+              {/* Days of Week Header */}
+              <div className="grid grid-cols-7 gap-1 md:gap-2 mb-2">
+                {daysOfWeek.map((day) => (
+                  <div
+                    key={day}
+                    className="text-center text-xs md:text-sm font-medium text-amber-500 uppercase tracking-wider py-2"
                   >
-                    <div className="flex items-start gap-4">
-                      <div className="bg-amber-600/10 p-3 rounded-xl ring-1 ring-amber-600/20 shrink-0">
-                        <Calendar className="w-6 h-6 text-amber-500" />
+                    {day}
+                  </div>
+                ))}
+              </div>
+
+              {/* Calendar Days */}
+              <div className="grid grid-cols-7 gap-1 md:gap-2">
+                {calendarDays.map((day, idx) => (
+                  <motion.button
+                    key={idx}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: idx * 0.005 }}
+                    onClick={() => day.events.length > 0 && setSelectedDay(day)}
+                    disabled={!day.isCurrentMonth || day.events.length === 0}
+                    className={`
+                      relative aspect-square p-1 md:p-2 rounded-lg border transition-all text-sm md:text-base
+                      ${!day.isCurrentMonth ? "opacity-30 cursor-default" : ""}
+                      ${day.isToday ? "border-amber-500 bg-amber-500/10" : "border-white/10"}
+                      ${day.events.length > 0 && day.isCurrentMonth
+                        ? "hover:border-amber-500/50 hover:bg-white/5 cursor-pointer"
+                        : "cursor-default"
+                      }
+                      ${selectedDay?.date.getTime() === day.date.getTime()
+                        ? "bg-amber-500/20 border-amber-500"
+                        : ""
+                      }
+                    `}
+                  >
+                    <span className={`block ${day.isToday ? "font-bold text-amber-500" : ""}`}>
+                      {day.dayOfMonth}
+                    </span>
+                    {day.events.length > 0 && day.isCurrentMonth && (
+                      <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">
+                        {day.events.slice(0, 3).map((_, i) => (
+                          <div key={i} className="w-1 h-1 rounded-full bg-amber-500" />
+                        ))}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-xl md:text-2xl font-medium mb-2">{event.title}</h3>
-                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-zinc-400 mb-3">
-                          <span className="inline-flex items-center gap-1.5">
-                            <Calendar className="w-4 h-4" />
-                            {event.date}
-                          </span>
-                          {event.time && (
-                            <span className="inline-flex items-center gap-1.5">
-                              <Clock className="w-4 h-4" />
-                              {event.time}
-                            </span>
-                          )}
-                          {event.location && (
-                            <span className="inline-flex items-center gap-1.5">
-                              <MapPin className="w-4 h-4" />
-                              {event.location}
-                            </span>
+                    )}
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+
+            {/* Selected Day Events Panel */}
+            <AnimatePresence>
+              {selectedDay && selectedDay.events.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="mt-6 bg-zinc-900/60 backdrop-blur-md border border-amber-500/50 rounded-2xl p-6"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="text-xl font-medium mb-1">
+                        {selectedDay.date.toLocaleDateString("en-US", {
+                          weekday: "long",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                      </h3>
+                      <p className="text-zinc-400 text-sm">
+                        {selectedDay.events.length} event{selectedDay.events.length !== 1 ? "s" : ""}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setSelectedDay(null)}
+                      className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+                      aria-label="Close"
+                    >
+                      <X className="w-5 h-5 text-zinc-400" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {selectedDay.events.map((event) => (
+                      <div
+                        key={event.id}
+                        className="flex items-start gap-3 p-4 bg-black/40 border border-white/10 rounded-xl"
+                      >
+                        <div className="bg-amber-600/10 p-2 rounded-lg ring-1 ring-amber-600/20 shrink-0">
+                          <Calendar className="w-5 h-5 text-amber-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium mb-1">{event.title}</h4>
+                          <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-zinc-400 mb-2">
+                            {event.time && (
+                              <span className="inline-flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {event.time}
+                              </span>
+                            )}
+                            {event.location && (
+                              <span className="inline-flex items-center gap-1">
+                                <MapPin className="w-3 h-3" />
+                                {event.location}
+                              </span>
+                            )}
+                          </div>
+                          {event.description && (
+                            <p className="text-zinc-300 text-sm whitespace-pre-line">{event.description}</p>
                           )}
                         </div>
-                        {event.description && (
-                          <p className="text-zinc-300 text-sm whitespace-pre-line">{event.description}</p>
-                        )}
                       </div>
-                    </div>
-                  </motion.li>
-                ))}
-              </ul>
-            </motion.section>
-          ))}
-        </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </>
+        )}
       </main>
     </div>
   );
