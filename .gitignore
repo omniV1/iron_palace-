@@ -10,3 +10,11 @@ public/youtube-videos.json
 .project
 .classpath
 *.log
+node_modules/
+dist/
+.vercel/
+.env
+.env.local
+.env.*.local
+.vercel
+.env*.local

@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './app/App'
+import AdminApp from './app/admin/AdminApp'
 import './styles/index.css'
 import faviconUrl from './assets/feef32863d06775804f6af6bbe43f8df154b97b4.png?w=64&format=webp&quality=80'
 
@@ -10,8 +11,10 @@ if (favicon) {
   favicon.type = 'image/webp'
 }
 
+const isAdminRoute = window.location.pathname.toLowerCase().startsWith('/admin')
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    {isAdminRoute ? <AdminApp /> : <App />}
   </React.StrictMode>,
 )

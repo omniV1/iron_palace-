@@ -1,8 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Calendar, ChevronLeft, ChevronRight, Facebook, Instagram, Play, X } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Download, Facebook, FileText, Instagram, Play, X } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { useYouTubeVideos, timeAgo } from "./hooks/useYouTubeVideos";
+import { useEvents } from "./hooks/useEvents";
+import { useGallery } from "./hooks/useGallery";
+import { useLibrary } from "./hooks/useLibrary";
 
 import imgMerchDragon from "../imports/Group2/9fe969f07b1189f5a7e8d627018c5bf063261cab.png?w=800&format=webp&quality=80";
 import imgMerchWhite from "../imports/Group2/0e04069fb44385863cd0bed92320736368ccc2bc.png?w=800&format=webp&quality=80";
@@ -57,63 +60,63 @@ const merchItems = [
   { id: 3, name: "Premium Grey Tee", price: "$27.99", image: imgMerchGrey },
 ];
 
-// Photo gallery - placeholder images
-// To integrate Facebook photos from: https://www.facebook.com/profile.php?id=100095172626714&sk=photos
-// You'll need to use the Facebook Graph API with an access token to fetch photos
-// See: https://developers.facebook.com/docs/graph-api/reference/user/photos
-const galleryPhotos = [
-  imgCommunity1,
-  imgCommunity2,
-  imgCommunity3,
+// Fallback photos shown when no admin uploads exist yet.
+const defaultGalleryPhotos: { url: string; caption: string }[] = [
+  { url: imgCommunity1, caption: "" },
+  { url: imgCommunity2, caption: "" },
+  { url: imgCommunity3, caption: "" },
 ];
 
-// Upcoming events - placeholder data (sync with Apple Calendar)
-const upcomingEvents = [
-  {
-    id: 1,
-    title: "Live Podcast Recording",
-    date: "April 15, 2026",
-    time: "7:00 PM EST",
-    location: "The Iron Palace Gym",
-  },
-  {
-    id: 2,
-    title: "Meet & Greet",
-    date: "April 22, 2026",
-    time: "5:00 PM EST",
-    location: "Downtown Convention Center",
-  },
-  {
-    id: 3,
-    title: "Strongman Competition",
-    date: "May 5, 2026",
-    time: "10:00 AM EST",
-    location: "City Arena",
-  },
-];
+function formatBytes(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes <= 0) return "";
+  const units = ["B", "KB", "MB", "GB"];
+  let i = 0;
+  let n = bytes;
+  while (n >= 1024 && i < units.length - 1) {
+    n /= 1024;
+    i++;
+  }
+  return `${n.toFixed(n >= 10 || i === 0 ? 0 : 1)} ${units[i]}`;
+}
 
 export default function App() {
   const [currentPhoto, setCurrentPhoto] = useState(0);
   const [hoveredCrew, setHoveredCrew] = useState<number | null>(null);
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
   const { videos, loading: videosLoading, error: videosError } = useYouTubeVideos(15);
+  const { events: liveEvents } = useEvents();
+  const { photos: livePhotos } = useGallery();
+  const { files: libraryFiles } = useLibrary();
 
   const closeVideoModal = useCallback(() => setActiveVideoId(null), []);
 
-  // Auto-rotate gallery
+  const galleryItems = useMemo(() => {
+    if (livePhotos.length > 0) {
+      return livePhotos.map((p) => ({ url: p.url, caption: p.caption }));
+    }
+    return defaultGalleryPhotos;
+  }, [livePhotos]);
+
   useEffect(() => {
+    if (currentPhoto >= galleryItems.length) {
+      setCurrentPhoto(0);
+    }
+  }, [galleryItems.length, currentPhoto]);
+
+  useEffect(() => {
+    if (galleryItems.length <= 1) return;
     const interval = setInterval(() => {
-      setCurrentPhoto((prev) => (prev + 1) % galleryPhotos.length);
+      setCurrentPhoto((prev) => (prev + 1) % galleryItems.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [galleryItems.length]);
 
   const nextPhoto = () => {
-    setCurrentPhoto((prev) => (prev + 1) % galleryPhotos.length);
+    setCurrentPhoto((prev) => (prev + 1) % galleryItems.length);
   };
 
   const prevPhoto = () => {
-    setCurrentPhoto((prev) => (prev - 1 + galleryPhotos.length) % galleryPhotos.length);
+    setCurrentPhoto((prev) => (prev - 1 + galleryItems.length) % galleryItems.length);
   };
 
   return (
@@ -494,37 +497,38 @@ export default function App() {
             <p className="text-zinc-400 text-sm">Join us at these upcoming events</p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {upcomingEvents.map((event, index) => (
-              <motion.div
-                key={event.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -4, scale: 1.02 }}
-                className="bg-zinc-900/60 backdrop-blur-md border border-white/10 rounded-2xl p-6 hover:border-amber-500/50 hover:bg-zinc-900/80 hover:shadow-xl hover:shadow-amber-600/10 transition-all duration-300"
-              >
-                <div className="flex items-start gap-3 mb-4">
-                  <div className="bg-yellow-600/10 p-2 rounded-lg ring-1 ring-amber-600/20">
-                    <Calendar className="w-6 h-6 text-amber-500 flex-shrink-0" />
+          {liveEvents.length === 0 ? (
+            <p className="text-center text-zinc-500 text-sm">No upcoming events yet. Check back soon.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+              {liveEvents.map((event, index) => (
+                <motion.div
+                  key={event.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ y: -4, scale: 1.02 }}
+                  className="bg-zinc-900/60 backdrop-blur-md border border-white/10 rounded-2xl p-6 hover:border-amber-500/50 hover:bg-zinc-900/80 hover:shadow-xl hover:shadow-amber-600/10 transition-all duration-300"
+                >
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="bg-yellow-600/10 p-2 rounded-lg ring-1 ring-amber-600/20">
+                      <Calendar className="w-6 h-6 text-amber-500 flex-shrink-0" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-medium mb-2">{event.title}</h3>
+                      <p className="text-zinc-400 text-sm mb-1">{event.date}</p>
+                      {event.time && <p className="text-zinc-400 text-sm mb-1">{event.time}</p>}
+                      {event.location && <p className="text-zinc-500 text-sm">{event.location}</p>}
+                      {event.description && (
+                        <p className="text-zinc-400 text-sm mt-2 whitespace-pre-line">{event.description}</p>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-xl font-medium mb-2">{event.title}</h3>
-                    <p className="text-zinc-400 text-sm mb-1">{event.date}</p>
-                    <p className="text-zinc-400 text-sm mb-1">{event.time}</p>
-                    <p className="text-zinc-500 text-sm">{event.location}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-
-          <div className="text-center mt-8">
-            <p className="text-sm text-zinc-500">
-              Sync with Apple Calendar: <span className="text-amber-500">webcal://your-calendar-link.ics</span>
-            </p>
-          </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -729,8 +733,8 @@ export default function App() {
               <AnimatePresence mode="wait">
                 <motion.img
                   key={currentPhoto}
-                  src={galleryPhotos[currentPhoto]}
-                  alt={`Gallery photo ${currentPhoto + 1}`}
+                  src={galleryItems[currentPhoto]?.url}
+                  alt={galleryItems[currentPhoto]?.caption || `Gallery photo ${currentPhoto + 1}`}
                   loading="lazy"
                   decoding="async"
                   className="w-full h-full object-cover"
@@ -741,6 +745,11 @@ export default function App() {
                 />
               </AnimatePresence>
               <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-black/0 via-transparent to-black/20"></div>
+              {galleryItems[currentPhoto]?.caption && (
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+                  <p className="text-white text-sm">{galleryItems[currentPhoto].caption}</p>
+                </div>
+              )}
             </div>
 
             <button
@@ -757,7 +766,7 @@ export default function App() {
             </button>
 
             <div className="flex justify-center gap-2 mt-6">
-              {galleryPhotos.map((_, index) => (
+              {galleryItems.map((_, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentPhoto(index)}
@@ -787,6 +796,52 @@ export default function App() {
           </div>
         </div>
       </section>
+
+      {/* Resources / Downloads — hidden until admin uploads something */}
+      {libraryFiles.length > 0 && (
+        <section className="py-20 px-4 bg-black">
+          <div className="max-w-7xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-12"
+            >
+              <h2 className="text-3xl md:text-4xl font-light tracking-wide uppercase mb-4">Resources</h2>
+              <p className="text-zinc-400 text-sm">Downloads, schedules, and other goodies</p>
+            </motion.div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
+              {libraryFiles.map((file, index) => (
+                <motion.a
+                  key={file.id}
+                  href={`${file.url}?download`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ y: -2 }}
+                  className="flex items-center gap-4 bg-zinc-900/60 backdrop-blur-md border border-white/10 rounded-2xl p-4 hover:border-amber-500/50 hover:bg-zinc-900/80 transition-all"
+                >
+                  <div className="bg-amber-600/10 p-2 rounded-lg ring-1 ring-amber-600/20 shrink-0">
+                    <FileText className="w-6 h-6 text-amber-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-base font-medium truncate">{file.title}</p>
+                    {file.description && (
+                      <p className="text-zinc-400 text-xs truncate">{file.description}</p>
+                    )}
+                    <p className="text-zinc-500 text-xs mt-1">{formatBytes(file.size)}</p>
+                  </div>
+                  <Download className="w-5 h-5 text-zinc-400 shrink-0" />
+                </motion.a>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Footer */}
       <footer className="relative z-10 bg-black py-8 px-4 border-t border-white/10">
@@ -860,7 +915,14 @@ export default function App() {
               </a>
             </div>
 
-            <p className="text-zinc-500 text-xs">© 2026 The Iron Palace Podcast. All rights reserved.</p>
+            <p className="text-zinc-500 text-xs">
+              <span
+                onClick={() => { window.location.href = "/admin"; }}
+                className="select-none"
+                aria-hidden="true"
+              >©</span>{" "}
+              2026 The Iron Palace Podcast. All rights reserved.
+            </p>
           </div>
         </div>
       </footer>
