@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Calendar, ChevronLeft, ChevronRight, Download, Facebook, FileText, Instagram, Play, X } from "lucide-react";
+import { ArrowRight, Calendar, ChevronLeft, ChevronRight, Download, Facebook, FileText, Instagram, Play, X } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { useYouTubeVideos, timeAgo } from "./hooks/useYouTubeVideos";
 import { useEvents } from "./hooks/useEvents";
@@ -96,6 +96,25 @@ export default function App() {
     }
     return defaultGalleryPhotos;
   }, [livePhotos]);
+
+  const thisMonthEvents = useMemo(() => {
+    const now = new Date();
+    const month = now.getMonth();
+    const year = now.getFullYear();
+    return liveEvents.filter((e) => {
+      const t = Date.parse(e.date);
+      if (!Number.isFinite(t)) return false;
+      const d = new Date(t);
+      return d.getFullYear() === year && d.getMonth() === month && d >= new Date(year, month, now.getDate());
+    });
+  }, [liveEvents]);
+
+  const currentMonthLabel = useMemo(
+    () => new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+    [],
+  );
+
+  const previewLibraryFiles = useMemo(() => libraryFiles.slice(0, 4), [libraryFiles]);
 
   useEffect(() => {
     if (currentPhoto >= galleryItems.length) {
@@ -484,7 +503,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Upcoming Events Section */}
+      {/* Upcoming Events — this month at a glance, with link to full calendar */}
       <section className="py-20 px-4 bg-black">
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -494,14 +513,20 @@ export default function App() {
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-light tracking-wide uppercase mb-4">Upcoming Events</h2>
-            <p className="text-zinc-400 text-sm">Join us at these upcoming events</p>
+            <p className="text-zinc-400 text-sm">What's happening this {currentMonthLabel.split(" ")[0]}</p>
           </motion.div>
 
-          {liveEvents.length === 0 ? (
-            <p className="text-center text-zinc-500 text-sm">No upcoming events yet. Check back soon.</p>
+          {thisMonthEvents.length === 0 ? (
+            <p className="text-center text-zinc-500 text-sm">
+              Nothing scheduled for {currentMonthLabel}.{" "}
+              <a href="/calendar" className="text-amber-500 hover:text-amber-400 underline underline-offset-2">
+                See the full calendar
+              </a>
+              .
+            </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-              {liveEvents.map((event, index) => (
+              {thisMonthEvents.slice(0, 3).map((event, index) => (
                 <motion.div
                   key={event.id}
                   initial={{ opacity: 0, y: 30 }}
@@ -521,7 +546,7 @@ export default function App() {
                       {event.time && <p className="text-zinc-400 text-sm mb-1">{event.time}</p>}
                       {event.location && <p className="text-zinc-500 text-sm">{event.location}</p>}
                       {event.description && (
-                        <p className="text-zinc-400 text-sm mt-2 whitespace-pre-line">{event.description}</p>
+                        <p className="text-zinc-400 text-sm mt-2 line-clamp-2 whitespace-pre-line">{event.description}</p>
                       )}
                     </div>
                   </div>
@@ -529,6 +554,16 @@ export default function App() {
               ))}
             </div>
           )}
+
+          <div className="text-center mt-10">
+            <a
+              href="/calendar"
+              className="inline-flex items-center gap-2 text-amber-500 hover:text-amber-400 text-sm uppercase tracking-wider transition-colors"
+            >
+              View full calendar
+              <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
         </div>
       </section>
 
@@ -812,7 +847,7 @@ export default function App() {
             </motion.div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
-              {libraryFiles.map((file, index) => (
+              {libraryFiles.slice(0, 4).map((file, index) => (
                 <motion.a
                   key={file.id}
                   href={`${file.url}?download`}
@@ -838,6 +873,16 @@ export default function App() {
                   <Download className="w-5 h-5 text-zinc-400 shrink-0" />
                 </motion.a>
               ))}
+            </div>
+
+            <div className="text-center mt-10">
+              <a
+                href="/resources"
+                className="inline-flex items-center gap-2 text-amber-500 hover:text-amber-400 text-sm uppercase tracking-wider transition-colors"
+              >
+                View all resources
+                <ArrowRight className="w-4 h-4" />
+              </a>
             </div>
           </div>
         </section>

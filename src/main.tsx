@@ -2,6 +2,8 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './app/App'
 import AdminApp from './app/admin/AdminApp'
+import CalendarPage from './app/pages/CalendarPage'
+import ResourcesPage from './app/pages/ResourcesPage'
 import './styles/index.css'
 import faviconUrl from './assets/feef32863d06775804f6af6bbe43f8df154b97b4.png?w=64&format=webp&quality=80'
 
@@ -11,10 +13,16 @@ if (favicon) {
   favicon.type = 'image/webp'
 }
 
-const isAdminRoute = window.location.pathname.toLowerCase().startsWith('/admin')
+function chooseRoot() {
+  const path = window.location.pathname.toLowerCase()
+  if (path.startsWith('/admin')) return <AdminApp />
+  if (path.startsWith('/calendar')) return <CalendarPage />
+  if (path.startsWith('/resources')) return <ResourcesPage />
+  return <App />
+}
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    {isAdminRoute ? <AdminApp /> : <App />}
+    {chooseRoot()}
   </React.StrictMode>,
 )
