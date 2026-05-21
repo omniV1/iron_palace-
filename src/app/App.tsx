@@ -13,7 +13,6 @@ import {
   DAY_STONES_PREVIEW_DETAIL,
   DAY_STONES_PREVIEW_LEAD,
   DAY_STONES_TITLE,
-  DAY_STONES_TOTAL_LBS,
 } from "./dayStones/constants";
 import { previewEntries, splitByCategory } from "./dayStones/utils";
 
@@ -596,14 +595,6 @@ export default function App() {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <div className="inline-flex items-center justify-center w-24 h-24 md:w-28 md:h-28 rounded-full border-2 border-amber-600/40 bg-amber-950/30 ring-4 ring-amber-600/10 mb-6 shadow-[0_0_60px_rgba(217,119,6,0.12)]">
-              <div className="text-center">
-                <span className="block text-2xl md:text-3xl font-light text-amber-500 tabular-nums leading-none">
-                  {DAY_STONES_TOTAL_LBS}
-                </span>
-                <span className="block text-[9px] uppercase tracking-[0.2em] text-zinc-500 mt-1">lbs</span>
-              </div>
-            </div>
             <h2 className="text-3xl md:text-4xl font-light tracking-wide uppercase mb-4">{DAY_STONES_TITLE}</h2>
             <p className="text-zinc-300 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">{DAY_STONES_PREVIEW_LEAD}</p>
             <p className="text-zinc-400 text-sm md:text-base max-w-2xl mx-auto leading-relaxed mt-3">{DAY_STONES_PREVIEW_DETAIL}</p>
