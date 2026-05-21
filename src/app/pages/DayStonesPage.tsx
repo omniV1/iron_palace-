@@ -8,10 +8,8 @@ import { DayStonesCelticDivider } from "../components/DayStonesCelticDivider";
 import {
   CATEGORY_LABELS,
   DAY_STONES_HERO,
-  DAY_STONES_TAGLINE,
   DAY_STONES_TAGLINE_DETAIL,
   DAY_STONES_TITLE,
-  DAY_STONES_TOTAL_LBS,
   DAY_STONES_WEIGHTS,
 } from "../dayStones/constants";
 import { splitByCategory } from "../dayStones/utils";
@@ -65,10 +63,7 @@ export default function DayStonesPage() {
 
           <DayStonesHeroImage src={DAY_STONES_HERO.src} alt={DAY_STONES_HERO.alt} className="mb-8" />
 
-          <p className="text-zinc-300 text-sm md:text-base max-w-xl mx-auto leading-relaxed">{DAY_STONES_TAGLINE}</p>
-          <p className="text-zinc-500 text-sm max-w-xl mx-auto leading-relaxed mt-2">{DAY_STONES_TAGLINE_DETAIL}</p>
-
-          <div className="mt-8 mx-auto grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-lg">
+          <div className="mx-auto grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-lg">
             {DAY_STONES_WEIGHTS.map(({ label, sublabel }) => (
               <div
                 key={label}
@@ -79,6 +74,8 @@ export default function DayStonesPage() {
               </div>
             ))}
           </div>
+
+          <p className="text-zinc-500 text-sm max-w-xl mx-auto leading-relaxed mt-6">{DAY_STONES_TAGLINE_DETAIL}</p>
         </motion.div>
 
         <DayStonesCelticDivider />

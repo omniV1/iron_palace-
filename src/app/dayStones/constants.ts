@@ -17,10 +17,7 @@ export const DAY_STONES_PREVIEW_LEAD = `The Day Stones are two stones, ${DAY_STO
 export const DAY_STONES_PREVIEW_DETAIL =
   "When someone gets them off the ground, their name goes in the record book. Lifts with straps and lifts without straps are logged separately.";
 
-/** Full /day-stones page — individual stone weights */
-export const DAY_STONES_TAGLINE = "454 lbs and 356 lbs.";
-
-/** Full /day-stones page — how the books are organized */
+/** Full /day-stones page — how the books are organized (weights live in stat badges below hero) */
 export const DAY_STONES_TAGLINE_DETAIL =
   "The record books below are split: with straps in one, without in the other.";
 
