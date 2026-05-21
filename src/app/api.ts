@@ -41,6 +41,7 @@ export type DayStoneEntry = {
   category: "straps" | "no_straps";
   liftedAt: string;
   notes?: string;
+  photoUrl?: string;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -198,5 +199,28 @@ export const api = {
       credentials: "include",
     });
     await handle(res);
+  },
+
+  async uploadDayStonePhoto(entryId: string, file: File): Promise<DayStoneEntry> {
+    const res = await fetch(`/api/day-stones/${encodeURIComponent(entryId)}/photo`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": file.type || "application/octet-stream",
+        "x-filename": encodeURIComponent(file.name),
+      },
+      body: file,
+    });
+    const data = await handle<{ entry: DayStoneEntry }>(res);
+    return data.entry;
+  },
+
+  async deleteDayStonePhoto(entryId: string): Promise<DayStoneEntry> {
+    const res = await fetch(`/api/day-stones/${encodeURIComponent(entryId)}/photo`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    const data = await handle<{ entry: DayStoneEntry }>(res);
+    return data.entry;
   },
 };

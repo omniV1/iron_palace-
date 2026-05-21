@@ -1,90 +1,107 @@
+import { useEffect } from "react";
 import { motion } from "motion/react";
-import { ArrowLeft, Dumbbell } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useDayStones } from "../hooks/useDayStones";
-import type { DayStoneEntry } from "../api";
+import { DayStoneRecordBook } from "../components/DayStoneRecordBook";
+import { DayStonesHeroImage } from "../components/DayStonesHeroImage";
+import { DayStonesCelticDivider } from "../components/DayStonesCelticDivider";
+import {
+  CATEGORY_LABELS,
+  DAY_STONES_HERO,
+  DAY_STONES_TAGLINE,
+  DAY_STONES_TAGLINE_DETAIL,
+  DAY_STONES_TITLE,
+  DAY_STONES_TOTAL_LBS,
+  DAY_STONES_WEIGHTS,
+} from "../dayStones/constants";
+import { splitByCategory } from "../dayStones/utils";
 import imgNewLogo from "../../assets/feef32863d06775804f6af6bbe43f8df154b97b4.png?w=500&format=webp&quality=85";
-
-function RecordBook({
-  title,
-  entries,
-}: {
-  title: string;
-  entries: DayStoneEntry[];
-}) {
-  return (
-    <div className="bg-zinc-900/60 border border-white/10 rounded-2xl p-6 md:p-8">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="bg-amber-600/10 p-2.5 rounded-lg ring-1 ring-amber-600/20">
-          <Dumbbell className="w-5 h-5 text-amber-500" />
-        </div>
-        <h2 className="text-xl md:text-2xl font-light uppercase tracking-wider">{title}</h2>
-      </div>
-
-      {entries.length === 0 ? (
-        <p className="text-zinc-500 text-sm">No lifters recorded yet.</p>
-      ) : (
-        <ul className="space-y-4">
-          {entries.map((entry, index) => (
-            <motion.li
-              key={entry.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className="border-b border-white/5 pb-4 last:border-0 last:pb-0"
-            >
-              <p className="font-medium text-lg">{entry.name}</p>
-              <p className="text-zinc-400 text-sm mt-0.5">{entry.liftedAt}</p>
-              {entry.notes && (
-                <p className="text-zinc-500 text-sm mt-1 whitespace-pre-line">{entry.notes}</p>
-              )}
-            </motion.li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
 
 export default function DayStonesPage() {
   const { entries, loading, error } = useDayStones();
+  const { withStraps, withoutStraps } = splitByCategory(entries);
 
-  const withStraps = entries.filter((e) => e.category === "straps");
-  const withoutStraps = entries.filter((e) => e.category === "no_straps");
+  useEffect(() => {
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&display=swap";
+    document.head.appendChild(link);
+    return () => {
+      document.head.removeChild(link);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <header className="border-b border-white/10 bg-black/80 backdrop-blur-md sticky top-0 z-40">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-3 text-zinc-400 hover:text-amber-500 transition-colors">
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(217,119,6,0.06),transparent_50%)]" />
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_80%_100%,rgba(5,150,105,0.04),transparent_40%)]" />
+
+      <header className="relative border-b border-white/10 bg-black/80 backdrop-blur-md sticky top-0 z-40">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-20 grid grid-cols-[1fr_auto_1fr] items-center">
+          <a href="/" className="flex items-center gap-3 text-zinc-400 hover:text-amber-500 transition-colors justify-self-start">
             <ArrowLeft className="w-4 h-4" />
             <span className="text-xs uppercase tracking-wider">Back to site</span>
           </a>
-          <a href="/" className="absolute left-1/2 -translate-x-1/2">
+          <a href="/" className="justify-self-center">
             <img src={imgNewLogo} alt="Iron Palace Podcast" className="h-12 w-auto" />
           </a>
-          <div className="w-24" />
+          <div aria-hidden="true" />
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <main className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
+          className="w-full text-center"
         >
-          <h1 className="text-4xl md:text-5xl font-light tracking-wide uppercase mb-4">The Day Stones</h1>
-          <p className="text-zinc-400 text-sm max-w-xl mx-auto">
-            Two stones weighing 454 lbs and 356 lbs — 810 lbs total. These record books honor those who have lifted them.
-          </p>
+          <p className="text-amber-500/80 text-xs uppercase tracking-[0.35em] mb-4">Record Books</p>
+          <h1
+            className="text-4xl md:text-5xl font-light tracking-wide uppercase mb-8"
+            style={{ fontFamily: "'Cinzel', serif" }}
+          >
+            {DAY_STONES_TITLE}
+          </h1>
+
+          <DayStonesHeroImage src={DAY_STONES_HERO.src} alt={DAY_STONES_HERO.alt} className="mb-8" />
+
+          <p className="text-zinc-300 text-sm md:text-base max-w-xl mx-auto leading-relaxed">{DAY_STONES_TAGLINE}</p>
+          <p className="text-zinc-500 text-sm max-w-xl mx-auto leading-relaxed mt-2">{DAY_STONES_TAGLINE_DETAIL}</p>
+
+          <div className="mt-8 mx-auto grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-lg">
+            {DAY_STONES_WEIGHTS.map(({ label, sublabel }) => (
+              <div
+                key={label}
+                className="px-4 py-2 rounded-lg border border-amber-600/40 bg-amber-950/20 ring-1 ring-amber-600/10 text-center"
+              >
+                <p className="text-amber-500 font-medium text-sm uppercase tracking-wider">{label}</p>
+                <p className="text-zinc-500 text-[10px] uppercase tracking-widest mt-0.5">{sublabel}</p>
+              </div>
+            ))}
+          </div>
         </motion.div>
+
+        <DayStonesCelticDivider />
 
         {loading && <p className="text-zinc-400 text-sm text-center">Loading…</p>}
         {error && <p className="text-red-400 text-sm text-center">Couldn't load record books: {error}</p>}
 
         {!loading && !error && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <RecordBook title="With Straps" entries={withStraps} />
-            <RecordBook title="Without Straps" entries={withoutStraps} />
+            <DayStoneRecordBook
+              title={CATEGORY_LABELS.straps}
+              category="straps"
+              entries={withStraps}
+              variant="full"
+              animate
+            />
+            <DayStoneRecordBook
+              title={CATEGORY_LABELS.no_straps}
+              category="no_straps"
+              entries={withoutStraps}
+              variant="full"
+              animate
+            />
           </div>
         )}
       </main>

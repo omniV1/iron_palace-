@@ -1,7 +1,10 @@
-import { useState, type FormEvent } from "react";
-import { Dumbbell, Trash2 } from "lucide-react";
+import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { Trash2, Upload, X } from "lucide-react";
 import { api, type DayStoneEntry } from "../api";
 import { useDayStones } from "../hooks/useDayStones";
+import { DayStoneEntryCard } from "../components/DayStoneEntryCard";
+import { CATEGORY_LABELS, MAX_PHOTO_BYTES } from "../dayStones/constants";
+import { splitByCategory } from "../dayStones/utils";
 
 const empty = {
   name: "",
@@ -10,16 +13,17 @@ const empty = {
   notes: "",
 };
 
-const categoryLabels: Record<DayStoneEntry["category"], string> = {
-  straps: "With Straps",
-  no_straps: "Without Straps",
-};
-
 export function DayStonesAdmin() {
   const { entries, loading, error, refresh, setEntries } = useDayStones();
   const [draft, setDraft] = useState(empty);
+  const [createPhoto, setCreatePhoto] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const createPhotoRef = useRef<HTMLInputElement>(null);
+
+  function replaceEntry(updated: DayStoneEntry) {
+    setEntries((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
+  }
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault();
@@ -27,8 +31,14 @@ export function DayStonesAdmin() {
     setFormError(null);
     try {
       const created = await api.createDayStone(draft);
-      setEntries((prev) => [...prev, created]);
+      let finalEntry = created;
+      if (createPhoto) {
+        finalEntry = await api.uploadDayStonePhoto(created.id, createPhoto);
+      }
+      setEntries((prev) => [...prev, finalEntry]);
       setDraft(empty);
+      setCreatePhoto(null);
+      if (createPhotoRef.current) createPhotoRef.current.value = "";
       refresh();
     } catch (err) {
       setFormError(err instanceof Error ? err.message : String(err));
@@ -47,8 +57,37 @@ export function DayStonesAdmin() {
     }
   }
 
-  const withStraps = entries.filter((e) => e.category === "straps");
-  const withoutStraps = entries.filter((e) => e.category === "no_straps");
+  async function handlePhotoUpload(entryId: string, file: File) {
+    try {
+      const updated = await api.uploadDayStonePhoto(entryId, file);
+      replaceEntry(updated);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  async function handlePhotoRemove(entryId: string) {
+    if (!confirm("Remove this lifter's photo?")) return;
+    try {
+      const updated = await api.deleteDayStonePhoto(entryId);
+      replaceEntry(updated);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  function pickCreatePhoto(e: ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0] ?? null;
+    setFormError(null);
+    if (f && f.size > MAX_PHOTO_BYTES) {
+      setFormError("Photo is larger than 4 MB. Resize and try again.");
+      setCreatePhoto(null);
+      return;
+    }
+    setCreatePhoto(f);
+  }
+
+  const { withStraps, withoutStraps } = splitByCategory(entries);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-8">
@@ -64,8 +103,8 @@ export function DayStonesAdmin() {
               onChange={(e) => setDraft({ ...draft, category: e.target.value as DayStoneEntry["category"] })}
               className="mt-1 w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-amber-500/60"
             >
-              <option value="straps">With Straps</option>
-              <option value="no_straps">Without Straps</option>
+              <option value="straps">{CATEGORY_LABELS.straps}</option>
+              <option value="no_straps">{CATEGORY_LABELS.no_straps}</option>
             </select>
           </label>
 
@@ -82,6 +121,20 @@ export function DayStonesAdmin() {
             onChange={(v) => setDraft({ ...draft, notes: v })}
             textarea
           />
+
+          <label className="block">
+            <span className="text-xs uppercase tracking-wider text-zinc-400">Photo (optional)</span>
+            <input
+              ref={createPhotoRef}
+              type="file"
+              accept="image/*"
+              onChange={pickCreatePhoto}
+              className="mt-1 w-full text-sm text-zinc-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-amber-600/20 file:text-amber-500 file:text-xs file:uppercase file:tracking-wider hover:file:bg-amber-600/30"
+            />
+            {createPhoto && (
+              <p className="text-zinc-500 text-xs mt-1">{createPhoto.name}</p>
+            )}
+          </label>
 
           {formError && <p className="text-sm text-red-400">{formError}</p>}
 
@@ -110,8 +163,20 @@ export function DayStonesAdmin() {
         )}
 
         <div className="space-y-6">
-          <EntryGroup title="With Straps" entries={withStraps} onDelete={handleDelete} />
-          <EntryGroup title="Without Straps" entries={withoutStraps} onDelete={handleDelete} />
+          <EntryGroup
+            title={CATEGORY_LABELS.straps}
+            entries={withStraps}
+            onDelete={handleDelete}
+            onPhotoUpload={handlePhotoUpload}
+            onPhotoRemove={handlePhotoRemove}
+          />
+          <EntryGroup
+            title={CATEGORY_LABELS.no_straps}
+            entries={withoutStraps}
+            onDelete={handleDelete}
+            onPhotoUpload={handlePhotoUpload}
+            onPhotoRemove={handlePhotoRemove}
+          />
         </div>
       </section>
     </div>
@@ -122,45 +187,102 @@ function EntryGroup({
   title,
   entries,
   onDelete,
+  onPhotoUpload,
+  onPhotoRemove,
 }: {
   title: string;
   entries: DayStoneEntry[];
   onDelete: (id: string) => void;
+  onPhotoUpload: (id: string, file: File) => void;
+  onPhotoRemove: (id: string) => void;
 }) {
   if (entries.length === 0) return null;
 
   return (
     <div>
       <h3 className="text-xs uppercase tracking-wider text-zinc-400 mb-2">{title}</h3>
-      <ul className="space-y-3">
+      <div className="space-y-3" role="list">
         {entries.map((entry) => (
-          <EntryRow key={entry.id} entry={entry} onDelete={() => onDelete(entry.id)} />
+          <div key={entry.id} role="listitem">
+            <DayStoneEntryCard
+              entry={entry}
+              variant="admin"
+              actions={
+                <EntryActions
+                  entry={entry}
+                  onDelete={() => onDelete(entry.id)}
+                  onPhotoUpload={(file) => onPhotoUpload(entry.id, file)}
+                  onPhotoRemove={() => onPhotoRemove(entry.id)}
+                />
+              }
+            />
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }
 
-function EntryRow({ entry, onDelete }: { entry: DayStoneEntry; onDelete: () => void }) {
+function EntryActions({
+  entry,
+  onDelete,
+  onPhotoUpload,
+  onPhotoRemove,
+}: {
+  entry: DayStoneEntry;
+  onDelete: () => void;
+  onPhotoUpload: (file: File) => void;
+  onPhotoRemove: () => void;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  function pickFile(e: ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (f.size > MAX_PHOTO_BYTES) {
+      alert("Photo is larger than 4 MB. Resize and try again.");
+      return;
+    }
+    onPhotoUpload(f);
+    if (fileRef.current) fileRef.current.value = "";
+  }
+
   return (
-    <li className="flex items-start gap-3 bg-black/40 border border-white/5 rounded-xl p-3">
-      <div className="bg-amber-600/10 p-2 rounded-lg ring-1 ring-amber-600/20 shrink-0">
-        <Dumbbell className="w-5 h-5 text-amber-500" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="font-medium truncate">{entry.name}</p>
-        <p className="text-zinc-400 text-xs">{entry.liftedAt}</p>
-        <p className="text-zinc-500 text-xs">{categoryLabels[entry.category]}</p>
-        {entry.notes && <p className="text-zinc-400 text-xs mt-1 whitespace-pre-line">{entry.notes}</p>}
-      </div>
+    <>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={pickFile}
+      />
       <button
-        onClick={onDelete}
-        className="text-zinc-500 hover:text-red-400 p-1 shrink-0"
-        aria-label="Delete"
+        type="button"
+        onClick={() => fileRef.current?.click()}
+        className="inline-flex items-center gap-1 text-xs uppercase tracking-wider text-amber-500 hover:text-amber-400"
       >
-        <Trash2 className="w-4 h-4" />
+        <Upload className="w-3.5 h-3.5" />
+        {entry.photoUrl ? "Change photo" : "Add photo"}
       </button>
-    </li>
+      {entry.photoUrl && (
+        <button
+          type="button"
+          onClick={onPhotoRemove}
+          className="inline-flex items-center gap-1 text-xs uppercase tracking-wider text-zinc-500 hover:text-zinc-300"
+        >
+          <X className="w-3.5 h-3.5" />
+          Remove photo
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={onDelete}
+        className="inline-flex items-center gap-1 text-xs uppercase tracking-wider text-zinc-500 hover:text-red-400"
+      >
+        <Trash2 className="w-3.5 h-3.5" />
+        Delete
+      </button>
+    </>
   );
 }
 

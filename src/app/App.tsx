@@ -1,12 +1,21 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ArrowRight, Calendar, ChevronLeft, ChevronRight, Download, Dumbbell, Facebook, FileText, Instagram, Play, X } from "lucide-react";
+import { ArrowRight, Calendar, ChevronLeft, ChevronRight, Download, Facebook, FileText, Heart, Instagram, Play, X } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { useYouTubeVideos, timeAgo } from "./hooks/useYouTubeVideos";
 import { useEvents } from "./hooks/useEvents";
 import { useGallery } from "./hooks/useGallery";
 import { useLibrary } from "./hooks/useLibrary";
 import { useDayStones } from "./hooks/useDayStones";
+import { DayStoneRecordBook } from "./components/DayStoneRecordBook";
+import {
+  CATEGORY_LABELS,
+  DAY_STONES_PREVIEW_DETAIL,
+  DAY_STONES_PREVIEW_LEAD,
+  DAY_STONES_TITLE,
+  DAY_STONES_TOTAL_LBS,
+} from "./dayStones/constants";
+import { previewEntries, splitByCategory } from "./dayStones/utils";
 
 import imgMerchDragon from "../imports/Group2/9fe969f07b1189f5a7e8d627018c5bf063261cab.png?w=800&format=webp&quality=80";
 import imgMerchWhite from "../imports/Group2/0e04069fb44385863cd0bed92320736368ccc2bc.png?w=800&format=webp&quality=80";
@@ -119,11 +128,10 @@ export default function App() {
   const previewLibraryFiles = useMemo(() => libraryFiles.slice(0, 4), [libraryFiles]);
 
   const dayStonesPreview = useMemo(() => {
-    const withStraps = dayStoneEntries.filter((e) => e.category === "straps");
-    const withoutStraps = dayStoneEntries.filter((e) => e.category === "no_straps");
+    const { withStraps, withoutStraps } = splitByCategory(dayStoneEntries);
     return {
-      withStraps: withStraps.slice(-3).reverse(),
-      withoutStraps: withoutStraps.slice(-3).reverse(),
+      withStraps: previewEntries(withStraps),
+      withoutStraps: previewEntries(withoutStraps),
     };
   }, [dayStoneEntries]);
 
@@ -579,53 +587,54 @@ export default function App() {
       </section>
 
       {/* The Day Stones — record books preview */}
-      <section className="py-20 px-4 bg-zinc-950">
-        <div className="max-w-7xl mx-auto">
+      <section className="relative py-20 px-4 bg-zinc-950 overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(217,119,6,0.05),transparent_55%)]" />
+        <div className="max-w-7xl mx-auto relative">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl md:text-4xl font-light tracking-wide uppercase mb-4">The Day Stones</h2>
-            <p className="text-zinc-400 text-sm max-w-xl mx-auto">
-              Two stones weighing 454 lbs and 356 lbs — 810 lbs total. Record books honor those who have lifted them.
-            </p>
+            <div className="inline-flex items-center justify-center w-24 h-24 md:w-28 md:h-28 rounded-full border-2 border-amber-600/40 bg-amber-950/30 ring-4 ring-amber-600/10 mb-6 shadow-[0_0_60px_rgba(217,119,6,0.12)]">
+              <div className="text-center">
+                <span className="block text-2xl md:text-3xl font-light text-amber-500 tabular-nums leading-none">
+                  {DAY_STONES_TOTAL_LBS}
+                </span>
+                <span className="block text-[9px] uppercase tracking-[0.2em] text-zinc-500 mt-1">lbs</span>
+              </div>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-light tracking-wide uppercase mb-4">{DAY_STONES_TITLE}</h2>
+            <p className="text-zinc-300 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">{DAY_STONES_PREVIEW_LEAD}</p>
+            <p className="text-zinc-400 text-sm md:text-base max-w-2xl mx-auto leading-relaxed mt-3">{DAY_STONES_PREVIEW_DETAIL}</p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            {[
-              { title: "With Straps", entries: dayStonesPreview.withStraps },
-              { title: "Without Straps", entries: dayStonesPreview.withoutStraps },
-            ].map(({ title, entries }, colIndex) => (
-              <motion.div
-                key={title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: colIndex * 0.1 }}
-                className="bg-zinc-900/60 backdrop-blur-md border border-white/10 rounded-2xl p-6"
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="bg-amber-600/10 p-2 rounded-lg ring-1 ring-amber-600/20">
-                    <Dumbbell className="w-5 h-5 text-amber-500" />
-                  </div>
-                  <h3 className="text-lg font-light uppercase tracking-wider">{title}</h3>
-                </div>
-                {entries.length === 0 ? (
-                  <p className="text-zinc-500 text-sm">No lifters recorded yet.</p>
-                ) : (
-                  <ul className="space-y-3">
-                    {entries.map((entry) => (
-                      <li key={entry.id} className="border-b border-white/5 pb-3 last:border-0 last:pb-0">
-                        <p className="font-medium">{entry.name}</p>
-                        <p className="text-zinc-400 text-xs">{entry.liftedAt}</p>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </motion.div>
-            ))}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              <DayStoneRecordBook
+                title={CATEGORY_LABELS.straps}
+                category="straps"
+                entries={dayStonesPreview.withStraps}
+                variant="compact"
+              />
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+            >
+              <DayStoneRecordBook
+                title={CATEGORY_LABELS.no_straps}
+                category="no_straps"
+                entries={dayStonesPreview.withoutStraps}
+                variant="compact"
+              />
+            </motion.div>
           </div>
 
           <div className="text-center mt-10">
@@ -692,58 +701,22 @@ export default function App() {
               </Button>
             </a>
 
-            <div className="mt-5">
+            <div className="mt-10 pt-10 border-t border-white/10">
               <a
                 href="https://venmo.com/Caleb-Day-10?txn=pay&note=Iron%20Palace%20Podcast%20Donation"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="relative group transition-transform duration-300 hover:scale-105 active:scale-95"
+                className="inline-block"
                 aria-label="Just the TIPP Jar"
               >
-                <svg className="h-[5.2rem] sm:h-[5.8rem] w-auto mx-auto drop-shadow-[0_10px_20px_rgba(0,0,0,0.55)] group-hover:drop-shadow-[0_12px_24px_rgba(0,0,0,0.65)] transition-all duration-300" viewBox="0 0 96 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <defs>
-                    <linearGradient id="shirtJarLidMetal" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#f0ca6a" />
-                      <stop offset="45%" stopColor="#c49532" />
-                      <stop offset="100%" stopColor="#8f6718" />
-                    </linearGradient>
-                    <linearGradient id="shirtJarGlass" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="rgba(255,255,255,0.28)" />
-                      <stop offset="38%" stopColor="rgba(255,255,255,0.08)" />
-                      <stop offset="100%" stopColor="rgba(255,255,255,0.2)" />
-                    </linearGradient>
-                    <linearGradient id="shirtJarCoin" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#ffd86f" />
-                      <stop offset="100%" stopColor="#c28a1f" />
-                    </linearGradient>
-                  </defs>
-
-                  <rect x="30" y="2.5" width="36" height="5" rx="1.5" fill="url(#shirtJarLidMetal)" stroke="#7a5610" strokeWidth="1" />
-                  <rect x="26" y="8" width="44" height="9" rx="2.5" fill="url(#shirtJarLidMetal)" stroke="#7a5610" strokeWidth="1" />
-                  <line x1="30" y1="11.5" x2="66" y2="11.5" stroke="#e8bc58" strokeWidth="0.9" opacity="0.65" />
-                  <line x1="29" y1="14.4" x2="67" y2="14.4" stroke="#6f4e14" strokeWidth="0.7" opacity="0.45" />
-
-                  <path
-                    d="M26 17 Q26 25 13 31 L13 101 Q13 119 31 119 L65 119 Q83 119 83 101 L83 31 Q70 25 70 17 Z"
-                    fill="url(#shirtJarGlass)"
-                    stroke="rgba(255,255,255,0.55)"
-                    strokeWidth="1.5"
-                  />
-
-                  <path d="M19 33 L23 33 L23 100 Q23 109 29 112 L19 112 L19 33 Z" fill="rgba(255,255,255,0.12)" />
-
-                  <ellipse cx="39" cy="104" rx="9.5" ry="3.1" fill="url(#shirtJarCoin)" opacity="0.9" />
-                  <ellipse cx="54.5" cy="105" rx="8.5" ry="2.8" fill="url(#shirtJarCoin)" opacity="0.78" />
-                  <ellipse cx="48" cy="99.5" rx="10" ry="3.1" fill="url(#shirtJarCoin)" opacity="0.85" />
-
-                  <rect x="24" y="54" width="48" height="28" rx="8" fill="rgba(0,0,0,0.35)" />
-                  <text x="48" y="65" textAnchor="middle" fill="#fff0c7" fontSize="8.5" fontWeight="700" letterSpacing="0.5" stroke="rgba(0,0,0,0.6)" strokeWidth="0.5">Just the</text>
-                  <text x="48" y="77" textAnchor="middle" fill="white" fontSize="11" fontWeight="800" letterSpacing="0.35" stroke="rgba(0,0,0,0.7)" strokeWidth="0.6">TIPP Jar</text>
-                </svg>
+                <Button
+                  variant="outline"
+                  className="border-white/15 bg-transparent text-zinc-400 hover:bg-white/5 hover:text-zinc-300 hover:border-white/25 rounded-lg px-5 py-2.5 h-auto text-xs font-light uppercase tracking-wider transition-all"
+                >
+                  <Heart className="w-3.5 h-3.5" />
+                  Just the TIPP Jar
+                </Button>
               </a>
-              <p className="mt-2 text-[10px] sm:text-xs text-zinc-400 uppercase tracking-wider">
-                Like the show? Toss a tip in the jar.
-              </p>
             </div>
           </div>
         </div>

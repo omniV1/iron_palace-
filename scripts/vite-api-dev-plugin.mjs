@@ -40,6 +40,16 @@ function resolveApiRoute(urlPath) {
     return { file: indexFile, id: null };
   }
 
+  // Nested dynamic: e.g. /api/day-stones/:id/photo
+  if (segments.length >= 3) {
+    const suffix = segments[segments.length - 1];
+    const id = segments[segments.length - 2];
+    const nestedFile = path.join(API_ROOT, ...segments.slice(0, -2), "[id]", `${suffix}.js`);
+    if (fs.existsSync(nestedFile)) {
+      return { file: nestedFile, id };
+    }
+  }
+
   if (segments.length >= 2) {
     const id = segments[segments.length - 1];
     const dynamicFile = path.join(API_ROOT, ...segments.slice(0, -1), "[id].js");
