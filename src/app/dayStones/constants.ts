@@ -39,6 +39,10 @@ export const PREVIEW_ENTRIES_PER_BOOK = 3;
 
 export const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
 
+/** Shown in admin when uploading lifter photos */
+export const LIFTER_PHOTO_HINT =
+  "Portrait or action shots work best. Max 4 MB (resize large professional photos if needed).";
+
 export type DayStoneCategory = DayStoneEntry["category"];
 
 export const CATEGORY_ACCENTS: Record<

@@ -3,7 +3,7 @@ import { Trash2, Upload, X } from "lucide-react";
 import { api, type DayStoneEntry } from "../api";
 import { useDayStones } from "../hooks/useDayStones";
 import { DayStoneEntryCard } from "../components/DayStoneEntryCard";
-import { CATEGORY_LABELS, MAX_PHOTO_BYTES } from "../dayStones/constants";
+import { CATEGORY_LABELS, LIFTER_PHOTO_HINT, MAX_PHOTO_BYTES } from "../dayStones/constants";
 import { splitByCategory } from "../dayStones/utils";
 
 const empty = {
@@ -134,6 +134,7 @@ export function DayStonesAdmin() {
             {createPhoto && (
               <p className="text-zinc-500 text-xs mt-1">{createPhoto.name}</p>
             )}
+            <p className="text-zinc-600 text-xs mt-1.5 leading-relaxed">{LIFTER_PHOTO_HINT}</p>
           </label>
 
           {formError && <p className="text-sm text-red-400">{formError}</p>}
@@ -240,7 +241,7 @@ function EntryActions({
     const f = e.target.files?.[0];
     if (!f) return;
     if (f.size > MAX_PHOTO_BYTES) {
-      alert("Photo is larger than 4 MB. Resize and try again.");
+      alert("Photo is larger than 4 MB. Resize the image and try again.");
       return;
     }
     onPhotoUpload(f);

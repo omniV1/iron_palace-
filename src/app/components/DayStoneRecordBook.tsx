@@ -44,7 +44,7 @@ export function DayStoneRecordBook({ title, category, entries, variant, animate 
           <p className="text-zinc-600 text-xs mt-1">Names appear here once logged.</p>
         </div>
       ) : (
-        <div className={isFull ? "space-y-1" : "space-y-3"} role="list">
+        <div className={isFull ? "space-y-2" : "space-y-3"} role="list">
           {entries.map((entry, index) =>
             animate ? (
               <motion.div
