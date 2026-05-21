@@ -62,12 +62,12 @@ async function handle<T>(res: Response): Promise<T> {
 
 export const api = {
   async me(): Promise<{ authenticated: boolean }> {
-    const res = await fetch("/api/me", { credentials: "include" });
+    const res = await fetch("/api/auth", { credentials: "include" });
     return handle(res);
   },
 
   async login(password: string): Promise<{ ok: true }> {
-    const res = await fetch("/api/login", {
+    const res = await fetch("/api/auth", {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
@@ -77,7 +77,12 @@ export const api = {
   },
 
   async logout(): Promise<{ ok: true }> {
-    const res = await fetch("/api/logout", { method: "POST", credentials: "include" });
+    const res = await fetch("/api/auth", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "logout" }),
+    });
     return handle(res);
   },
 

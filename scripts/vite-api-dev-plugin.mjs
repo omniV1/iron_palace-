@@ -40,21 +40,20 @@ function resolveApiRoute(urlPath) {
     return { file: indexFile, id: null };
   }
 
-  // Nested dynamic: e.g. /api/day-stones/:id/photo
-  if (segments.length >= 3) {
-    const suffix = segments[segments.length - 1];
-    const id = segments[segments.length - 2];
-    const nestedFile = path.join(API_ROOT, ...segments.slice(0, -2), "[id]", `${suffix}.js`);
-    if (fs.existsSync(nestedFile)) {
-      return { file: nestedFile, id };
-    }
-  }
-
+  // Dynamic [id].js: e.g. /api/events/:id
   if (segments.length >= 2) {
     const id = segments[segments.length - 1];
     const dynamicFile = path.join(API_ROOT, ...segments.slice(0, -1), "[id].js");
     if (fs.existsSync(dynamicFile)) {
       return { file: dynamicFile, id };
+    }
+  }
+
+  // Catch-all [...path].js: e.g. /api/day-stones/:entryId/photo
+  if (segments.length >= 2) {
+    const catchAllFile = path.join(API_ROOT, segments[0], "[...path].js");
+    if (fs.existsSync(catchAllFile)) {
+      return { file: catchAllFile, path: segments.slice(1) };
     }
   }
 
@@ -95,6 +94,7 @@ export function apiDevPlugin() {
           const requestUrl = new URL(url, "http://localhost");
           const query = Object.fromEntries(requestUrl.searchParams);
           if (route.id) query.id = route.id;
+          if (route.path) query.path = route.path;
 
           wrapResponse(res);
           req.query = query;
