@@ -4,6 +4,7 @@ import App from './app/App'
 import AdminApp from './app/admin/AdminApp'
 import CalendarPage from './app/pages/CalendarPage'
 import ResourcesPage from './app/pages/ResourcesPage'
+import DayStonesPage from './app/pages/DayStonesPage'
 import './styles/index.css'
 import faviconUrl from './assets/feef32863d06775804f6af6bbe43f8df154b97b4.png?w=64&format=webp&quality=80'
 
@@ -18,6 +19,7 @@ function chooseRoot() {
   if (path.startsWith('/admin')) return <AdminApp />
   if (path.startsWith('/calendar')) return <CalendarPage />
   if (path.startsWith('/resources')) return <ResourcesPage />
+  if (path.startsWith('/day-stones')) return <DayStonesPage />
   return <App />
 }
 

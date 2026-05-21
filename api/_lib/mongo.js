@@ -16,6 +16,11 @@ const cache = globalThis.__ipMongo ?? (globalThis.__ipMongo = { client: null, pr
 
 async function getClient() {
   if (cache.client) return cache.client;
+  if (!URI) {
+    const err = new Error("MONGODB_URI is not configured");
+    err.statusCode = 503;
+    throw err;
+  }
   if (!cache.promise) {
     cache.promise = MongoClient.connect(URI, {
       maxPoolSize: 5,

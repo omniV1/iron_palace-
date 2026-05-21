@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ArrowRight, Calendar, ChevronLeft, ChevronRight, Download, Facebook, FileText, Instagram, Play, X } from "lucide-react";
+import { ArrowRight, Calendar, ChevronLeft, ChevronRight, Download, Dumbbell, Facebook, FileText, Instagram, Play, X } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { useYouTubeVideos, timeAgo } from "./hooks/useYouTubeVideos";
 import { useEvents } from "./hooks/useEvents";
 import { useGallery } from "./hooks/useGallery";
 import { useLibrary } from "./hooks/useLibrary";
+import { useDayStones } from "./hooks/useDayStones";
 
 import imgMerchDragon from "../imports/Group2/9fe969f07b1189f5a7e8d627018c5bf063261cab.png?w=800&format=webp&quality=80";
 import imgMerchWhite from "../imports/Group2/0e04069fb44385863cd0bed92320736368ccc2bc.png?w=800&format=webp&quality=80";
@@ -87,6 +88,7 @@ export default function App() {
   const { events: liveEvents } = useEvents();
   const { photos: livePhotos } = useGallery();
   const { files: libraryFiles } = useLibrary();
+  const { entries: dayStoneEntries } = useDayStones();
 
   const closeVideoModal = useCallback(() => setActiveVideoId(null), []);
 
@@ -115,6 +117,15 @@ export default function App() {
   );
 
   const previewLibraryFiles = useMemo(() => libraryFiles.slice(0, 4), [libraryFiles]);
+
+  const dayStonesPreview = useMemo(() => {
+    const withStraps = dayStoneEntries.filter((e) => e.category === "straps");
+    const withoutStraps = dayStoneEntries.filter((e) => e.category === "no_straps");
+    return {
+      withStraps: withStraps.slice(-3).reverse(),
+      withoutStraps: withoutStraps.slice(-3).reverse(),
+    };
+  }, [dayStoneEntries]);
 
   useEffect(() => {
     if (currentPhoto >= galleryItems.length) {
@@ -561,6 +572,68 @@ export default function App() {
               className="inline-flex items-center gap-2 text-amber-500 hover:text-amber-400 text-sm uppercase tracking-wider transition-colors"
             >
               View full calendar
+              <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* The Day Stones — record books preview */}
+      <section className="py-20 px-4 bg-zinc-950">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl md:text-4xl font-light tracking-wide uppercase mb-4">The Day Stones</h2>
+            <p className="text-zinc-400 text-sm max-w-xl mx-auto">
+              Two stones weighing 454 lbs and 356 lbs — 810 lbs total. Record books honor those who have lifted them.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            {[
+              { title: "With Straps", entries: dayStonesPreview.withStraps },
+              { title: "Without Straps", entries: dayStonesPreview.withoutStraps },
+            ].map(({ title, entries }, colIndex) => (
+              <motion.div
+                key={title}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: colIndex * 0.1 }}
+                className="bg-zinc-900/60 backdrop-blur-md border border-white/10 rounded-2xl p-6"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="bg-amber-600/10 p-2 rounded-lg ring-1 ring-amber-600/20">
+                    <Dumbbell className="w-5 h-5 text-amber-500" />
+                  </div>
+                  <h3 className="text-lg font-light uppercase tracking-wider">{title}</h3>
+                </div>
+                {entries.length === 0 ? (
+                  <p className="text-zinc-500 text-sm">No lifters recorded yet.</p>
+                ) : (
+                  <ul className="space-y-3">
+                    {entries.map((entry) => (
+                      <li key={entry.id} className="border-b border-white/5 pb-3 last:border-0 last:pb-0">
+                        <p className="font-medium">{entry.name}</p>
+                        <p className="text-zinc-400 text-xs">{entry.liftedAt}</p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="text-center mt-10">
+            <a
+              href="/day-stones"
+              className="inline-flex items-center gap-2 text-amber-500 hover:text-amber-400 text-sm uppercase tracking-wider transition-colors"
+            >
+              View full record books
               <ArrowRight className="w-4 h-4" />
             </a>
           </div>

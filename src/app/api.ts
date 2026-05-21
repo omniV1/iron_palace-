@@ -35,6 +35,16 @@ export type LibraryFile = {
   url: string;
 };
 
+export type DayStoneEntry = {
+  id: string;
+  name: string;
+  category: "straps" | "no_straps";
+  liftedAt: string;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 async function handle<T>(res: Response): Promise<T> {
   if (!res.ok) {
     let message = `HTTP ${res.status}`;
@@ -159,6 +169,31 @@ export const api = {
 
   async deleteLibrary(id: string): Promise<void> {
     const res = await fetch(`/api/library/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    await handle(res);
+  },
+
+  async listDayStones(): Promise<DayStoneEntry[]> {
+    const res = await fetch("/api/day-stones", { credentials: "include" });
+    const data = await handle<{ entries: DayStoneEntry[] }>(res);
+    return data.entries;
+  },
+
+  async createDayStone(payload: Omit<DayStoneEntry, "id">): Promise<DayStoneEntry> {
+    const res = await fetch("/api/day-stones", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await handle<{ entry: DayStoneEntry }>(res);
+    return data.entry;
+  },
+
+  async deleteDayStone(id: string): Promise<void> {
+    const res = await fetch(`/api/day-stones/${encodeURIComponent(id)}`, {
       method: "DELETE",
       credentials: "include",
     });

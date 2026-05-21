@@ -3,6 +3,7 @@ import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { imagetools } from 'vite-imagetools'
+import { apiDevPlugin } from './scripts/vite-api-dev-plugin.mjs'
 
 /** Same channel as `CHANNEL_ID` in `src/app/hooks/useYouTubeVideos.ts` */
 const YOUTUBE_CHANNEL_ID = 'UC9tV0Z2xN1HtvQu5F-ERqpg'
@@ -19,6 +20,7 @@ const youtubeRssProxy = {
 
 export default defineConfig({
   plugins: [
+    apiDevPlugin(),
     react(),
     tailwindcss(),
     imagetools(),

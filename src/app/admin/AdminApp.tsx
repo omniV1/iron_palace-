@@ -1,18 +1,20 @@
 import { useState } from "react";
-import { Calendar, FileText, Image as ImageIcon, LogOut } from "lucide-react";
+import { Calendar, Dumbbell, FileText, Image as ImageIcon, LogOut } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { LoginPage } from "./LoginPage";
 import { EventsAdmin } from "./EventsAdmin";
 import { GalleryAdmin } from "./GalleryAdmin";
 import { LibraryAdmin } from "./LibraryAdmin";
+import { DayStonesAdmin } from "./DayStonesAdmin";
 import imgNewLogo from "../../assets/feef32863d06775804f6af6bbe43f8df154b97b4.png?w=500&format=webp&quality=85";
 
-type Tab = "events" | "gallery" | "library";
+type Tab = "events" | "gallery" | "library" | "day_stones";
 
 const tabs: { id: Tab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: "events", label: "Events", icon: Calendar },
   { id: "gallery", label: "Gallery", icon: ImageIcon },
   { id: "library", label: "Library", icon: FileText },
+  { id: "day_stones", label: "Day Stones", icon: Dumbbell },
 ];
 
 export default function AdminApp() {
@@ -73,6 +75,7 @@ export default function AdminApp() {
         {tab === "events" && <EventsAdmin />}
         {tab === "gallery" && <GalleryAdmin />}
         {tab === "library" && <LibraryAdmin />}
+        {tab === "day_stones" && <DayStonesAdmin />}
       </main>
     </div>
   );

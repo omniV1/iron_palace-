@@ -6,6 +6,8 @@
     { "source": "/calendar", "destination": "/index.html" },
     { "source": "/calendar/(.*)", "destination": "/index.html" },
     { "source": "/resources", "destination": "/index.html" },
-    { "source": "/resources/(.*)", "destination": "/index.html" }
+    { "source": "/resources/(.*)", "destination": "/index.html" },
+    { "source": "/day-stones", "destination": "/index.html" },
+    { "source": "/day-stones/(.*)", "destination": "/index.html" }
   ]
 }
