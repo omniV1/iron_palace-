@@ -40,6 +40,14 @@ function resolveApiRoute(urlPath) {
     return { file: indexFile, id: null };
   }
 
+  // Optional catch-all [[...slug]].js: e.g. /api/day-stones, /api/day-stones/:id/photo
+  if (segments.length >= 1) {
+    const optionalCatchAll = path.join(API_ROOT, segments[0], "[[...slug]].js");
+    if (fs.existsSync(optionalCatchAll)) {
+      return { file: optionalCatchAll, slug: segments.slice(1) };
+    }
+  }
+
   // Dynamic [id].js: e.g. /api/events/:id
   if (segments.length >= 2) {
     const id = segments[segments.length - 1];
@@ -95,6 +103,7 @@ export function apiDevPlugin() {
           const query = Object.fromEntries(requestUrl.searchParams);
           if (route.id) query.id = route.id;
           if (route.path) query.path = route.path;
+          if (route.slug !== undefined) query.slug = route.slug;
 
           wrapResponse(res);
           req.query = query;

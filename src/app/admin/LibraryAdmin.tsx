@@ -1,11 +1,22 @@
 import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
-import { FileText, Trash2, Upload } from "lucide-react";
+import { FileText, Upload } from "lucide-react";
 import { api } from "../api";
 import { useLibrary } from "../hooks/useLibrary";
-import { GlassCard } from "../components/GlassCard";
+import { CollapsiblePanel } from "../components/CollapsiblePanel";
 import { GoldButton } from "../components/GoldButton";
 import { IconWell } from "../components/IconWell";
 import { inputClassName, labelClassName } from "../components/IconWell";
+import {
+  AdminDeleteButton,
+  AdminForm,
+  AdminFormCard,
+  AdminFormError,
+  AdminFormHint,
+  AdminListCard,
+  AdminListItem,
+  AdminPageGrid,
+  adminFileInputClassName,
+} from "./AdminPrimitives";
 
 const MAX_BYTES = 4 * 1024 * 1024;
 
@@ -28,6 +39,7 @@ export function LibraryAdmin() {
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [uploadOpen, setUploadOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   function pickFile(e: ChangeEvent<HTMLInputElement>) {
@@ -53,6 +65,7 @@ export function LibraryAdmin() {
       setFile(null);
       setTitle("");
       setDescription("");
+      setUploadOpen(false);
       if (fileRef.current) fileRef.current.value = "";
       refresh();
     } catch (err) {
@@ -73,85 +86,77 @@ export function LibraryAdmin() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-8">
-      <GlassCard className="p-6">
-        <h2 className="font-display text-lg font-light uppercase tracking-wider mb-4">Upload File</h2>
-        <form onSubmit={handleUpload} className="space-y-3">
-          <label className="block">
-            <span className={labelClassName}>File</span>
-            <input
-              ref={fileRef}
-              type="file"
-              onChange={pickFile}
-              required
-              className={`${inputClassName} file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:bg-primary file:text-primary-foreground file:cursor-pointer`}
-            />
-          </label>
-          <label className="block">
-            <span className={labelClassName}>Title</span>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} className={inputClassName} />
-          </label>
-          <label className="block">
-            <span className={labelClassName}>Description (optional)</span>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-              className={inputClassName}
-            />
-          </label>
+    <AdminPageGrid>
+      <AdminFormCard title="Upload File">
+        <AdminForm onSubmit={handleUpload}>
+          <CollapsiblePanel
+            label="File"
+            hint={file ? file.name : "Tap to choose"}
+            open={uploadOpen}
+            onOpenChange={setUploadOpen}
+          >
+            <div className="space-y-2">
+              <input ref={fileRef} type="file" onChange={pickFile} required={!file} className={adminFileInputClassName} />
+              <label className="block">
+                <span className={labelClassName}>Title</span>
+                <input value={title} onChange={(e) => setTitle(e.target.value)} className={inputClassName} />
+              </label>
+              <label className="block">
+                <span className={labelClassName}>Description (optional)</span>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={3}
+                  className={inputClassName}
+                />
+              </label>
+            </div>
+          </CollapsiblePanel>
 
-          {formError && <p className="text-sm text-destructive">{formError}</p>}
+          <AdminFormError message={formError} />
 
           <GoldButton type="submit" variant="flat" disabled={submitting || !file} className="w-full">
             <Upload className="w-4 h-4" />
             {submitting ? "Uploading…" : "Upload"}
           </GoldButton>
-          <p className="text-xs text-muted-foreground">Max 4 MB per file.</p>
-        </form>
-      </GlassCard>
+          <AdminFormHint>Max 4 MB per file.</AdminFormHint>
+        </AdminForm>
+      </AdminFormCard>
 
-      <GlassCard className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-display text-lg font-light uppercase tracking-wider">All Files</h2>
-          <button onClick={refresh} className="text-xs text-muted-foreground hover:text-gold-bright uppercase tracking-wider font-display">
-            Refresh
-          </button>
-        </div>
-        {loading && <p className="text-muted-foreground text-sm">Loading…</p>}
-        {error && <p className="text-destructive text-sm">{error}</p>}
-        {!loading && files.length === 0 && <p className="text-muted-foreground text-sm">No files yet.</p>}
-
+      <AdminListCard
+        title="All Files"
+        onRefresh={refresh}
+        loading={loading}
+        error={error}
+        empty="No files yet."
+        isEmpty={files.length === 0}
+      >
         <ul className="space-y-3">
           {files.map((f) => (
-            <li key={f.id} className="flex items-start gap-3 bg-input-background border border-border-subtle rounded-xl p-3">
-              <IconWell icon={FileText} size="sm" />
-              <div className="flex-1 min-w-0">
-                <p className="font-medium truncate">{f.title}</p>
-                {f.description && <p className="text-muted-foreground text-xs truncate">{f.description}</p>}
-                <p className="text-muted-foreground/70 text-xs mt-1">
-                  {f.filename} · {formatBytes(f.size)}
-                </p>
-                <div className="mt-2 flex gap-3 text-xs">
-                  <a href={f.url} target="_blank" rel="noopener noreferrer" className="text-gold hover:text-gold-bright">
-                    Open
-                  </a>
-                  <a href={`${f.url}?download`} className="text-gold hover:text-gold-bright">
-                    Download
-                  </a>
+            <li key={f.id}>
+              <AdminListItem>
+                <IconWell icon={FileText} size="sm" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium truncate">{f.title}</p>
+                  {f.description && <p className="text-muted-foreground text-xs truncate">{f.description}</p>}
+                  <p className="text-muted-foreground/70 text-xs mt-1">
+                    {f.filename} · {formatBytes(f.size)}
+                  </p>
+                  <div className="mt-2 flex gap-3 text-xs">
+                    <a href={f.url} target="_blank" rel="noopener noreferrer" className="text-gold hover:text-gold-bright">
+                      Open
+                    </a>
+                    <a href={`${f.url}?download`} className="text-gold hover:text-gold-bright">
+                      Download
+                    </a>
+                  </div>
                 </div>
-              </div>
-              <button
-                onClick={() => handleDelete(f.id)}
-                className="text-muted-foreground hover:text-destructive p-1 shrink-0"
-                aria-label="Delete"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+                <AdminDeleteButton onClick={() => handleDelete(f.id)} />
+              </AdminListItem>
             </li>
           ))}
         </ul>
-      </GlassCard>
-    </div>
+      </AdminListCard>
+    </AdminPageGrid>
   );
 }

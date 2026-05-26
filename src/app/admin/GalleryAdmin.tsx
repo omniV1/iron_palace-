@@ -1,10 +1,20 @@
 import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
-import { Trash2, Upload } from "lucide-react";
+import { Upload } from "lucide-react";
 import { api } from "../api";
 import { useGallery } from "../hooks/useGallery";
-import { GlassCard } from "../components/GlassCard";
+import { CollapsiblePanel } from "../components/CollapsiblePanel";
 import { GoldButton } from "../components/GoldButton";
 import { inputClassName, labelClassName } from "../components/IconWell";
+import {
+  AdminDeleteButton,
+  AdminForm,
+  AdminFormCard,
+  AdminFormError,
+  AdminFormHint,
+  AdminListCard,
+  AdminPageGrid,
+  adminFileInputClassName,
+} from "./AdminPrimitives";
 
 const MAX_BYTES = 4 * 1024 * 1024;
 
@@ -14,6 +24,7 @@ export function GalleryAdmin() {
   const [caption, setCaption] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [uploadOpen, setUploadOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   function pickFile(e: ChangeEvent<HTMLInputElement>) {
@@ -37,6 +48,7 @@ export function GalleryAdmin() {
       setPhotos((prev) => [photo, ...prev]);
       setFile(null);
       setCaption("");
+      setUploadOpen(false);
       if (fileRef.current) fileRef.current.value = "";
       refresh();
     } catch (err) {
@@ -57,51 +69,49 @@ export function GalleryAdmin() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-8">
-      <GlassCard className="p-6">
-        <h2 className="font-display text-lg font-light uppercase tracking-wider mb-4">Upload Photo</h2>
-        <form onSubmit={handleUpload} className="space-y-3">
-          <label className="block">
-            <span className={labelClassName}>Image</span>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              onChange={pickFile}
-              required
-              className={`${inputClassName} file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:bg-primary file:text-primary-foreground file:cursor-pointer`}
-            />
-          </label>
-          <label className="block">
-            <span className={labelClassName}>Caption (optional)</span>
-            <input
-              value={caption}
-              onChange={(e) => setCaption(e.target.value)}
-              className={inputClassName}
-            />
-          </label>
+    <AdminPageGrid>
+      <AdminFormCard title="Upload Photo">
+        <AdminForm onSubmit={handleUpload}>
+          <CollapsiblePanel
+            label="Image"
+            hint={file ? file.name : "Tap to choose"}
+            open={uploadOpen}
+            onOpenChange={setUploadOpen}
+          >
+            <div className="space-y-2">
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                onChange={pickFile}
+                required={!file}
+                className={adminFileInputClassName}
+              />
+              <label className="block">
+                <span className={labelClassName}>Caption (optional)</span>
+                <input value={caption} onChange={(e) => setCaption(e.target.value)} className={inputClassName} />
+              </label>
+            </div>
+          </CollapsiblePanel>
 
-          {formError && <p className="text-sm text-destructive">{formError}</p>}
+          <AdminFormError message={formError} />
 
           <GoldButton type="submit" variant="flat" disabled={submitting || !file} className="w-full">
             <Upload className="w-4 h-4" />
             {submitting ? "Uploading…" : "Upload"}
           </GoldButton>
-          <p className="text-xs text-muted-foreground">Max 4 MB. Images only.</p>
-        </form>
-      </GlassCard>
+          <AdminFormHint>Max 4 MB. Images only.</AdminFormHint>
+        </AdminForm>
+      </AdminFormCard>
 
-      <GlassCard className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-display text-lg font-light uppercase tracking-wider">All Photos</h2>
-          <button onClick={refresh} className="text-xs text-muted-foreground hover:text-gold-bright uppercase tracking-wider font-display">
-            Refresh
-          </button>
-        </div>
-        {loading && <p className="text-muted-foreground text-sm">Loading…</p>}
-        {error && <p className="text-destructive text-sm">{error}</p>}
-        {!loading && photos.length === 0 && <p className="text-muted-foreground text-sm">No photos yet.</p>}
-
+      <AdminListCard
+        title="All Photos"
+        onRefresh={refresh}
+        loading={loading}
+        error={error}
+        empty="No photos yet."
+        isEmpty={photos.length === 0}
+      >
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {photos.map((photo) => (
             <div key={photo.id} className="relative group rounded-lg overflow-hidden border border-border-subtle">
@@ -111,17 +121,13 @@ export function GalleryAdmin() {
                   <p className="text-foreground text-xs truncate">{photo.caption}</p>
                 </div>
               )}
-              <button
-                onClick={() => handleDelete(photo.id)}
-                className="absolute top-1 right-1 p-1.5 rounded-full bg-background/70 text-foreground opacity-0 group-hover:opacity-100 hover:bg-destructive transition"
-                aria-label="Delete"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
+              <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <AdminDeleteButton onClick={() => handleDelete(photo.id)} compact />
+              </div>
             </div>
           ))}
         </div>
-      </GlassCard>
-    </div>
+      </AdminListCard>
+    </AdminPageGrid>
   );
 }

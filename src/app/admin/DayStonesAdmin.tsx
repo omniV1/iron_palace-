@@ -1,13 +1,24 @@
-import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
-import { Trash2, Upload, X } from "lucide-react";
+import { useRef, useState, useEffect, type ChangeEvent, type FormEvent } from "react";
+import { Upload, X } from "lucide-react";
 import { api, type DayStoneEntry } from "../api";
 import { useDayStones } from "../hooks/useDayStones";
 import { DayStoneEntryCard } from "../components/DayStoneEntryCard";
-import { GlassCard } from "../components/GlassCard";
+import { CollapsiblePanel } from "../components/CollapsiblePanel";
 import { GoldButton } from "../components/GoldButton";
 import { inputClassName, labelClassName } from "../components/IconWell";
 import { CATEGORY_LABELS, MAX_PHOTO_BYTES } from "../dayStones/constants";
 import { splitByCategory } from "../dayStones/utils";
+import {
+  AdminDeleteButton,
+  AdminField,
+  AdminForm,
+  AdminFormCard,
+  AdminFormError,
+  AdminGroupHeading,
+  AdminListCard,
+  AdminPageGrid,
+  adminFileInputClassName,
+} from "./AdminPrimitives";
 
 const empty = {
   name: "",
@@ -20,9 +31,21 @@ export function DayStonesAdmin() {
   const { entries, loading, error, refresh, setEntries } = useDayStones();
   const [draft, setDraft] = useState(empty);
   const [createPhoto, setCreatePhoto] = useState<File | null>(null);
+  const [createPhotoPreview, setCreatePhotoPreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [photoOpen, setPhotoOpen] = useState(false);
   const createPhotoRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!createPhoto) {
+      setCreatePhotoPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(createPhoto);
+    setCreatePhotoPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [createPhoto]);
 
   function replaceEntry(updated: DayStoneEntry) {
     setEntries((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
@@ -36,11 +59,18 @@ export function DayStonesAdmin() {
       const created = await api.createDayStone(draft);
       let finalEntry = created;
       if (createPhoto) {
-        finalEntry = await api.uploadDayStonePhoto(created.id, createPhoto);
+        try {
+          finalEntry = await api.uploadDayStonePhoto(created.id, createPhoto);
+        } catch (photoErr) {
+          setFormError(
+            `Lifter saved, but photo upload failed: ${photoErr instanceof Error ? photoErr.message : String(photoErr)}`,
+          );
+        }
       }
       setEntries((prev) => [...prev, finalEntry]);
       setDraft(empty);
       setCreatePhoto(null);
+      setPhotoOpen(false);
       if (createPhotoRef.current) createPhotoRef.current.value = "";
       refresh();
     } catch (err) {
@@ -93,11 +123,10 @@ export function DayStonesAdmin() {
   const { withStraps, withoutStraps } = splitByCategory(entries);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-8">
-      <GlassCard className="p-6">
-        <h2 className="font-display text-lg font-light uppercase tracking-wider mb-4">Add Lifter</h2>
-        <form onSubmit={handleCreate} className="space-y-3">
-          <Field label="Name" value={draft.name} onChange={(v) => setDraft({ ...draft, name: v })} required />
+    <AdminPageGrid>
+      <AdminFormCard title="Add Lifter">
+        <AdminForm onSubmit={handleCreate}>
+          <AdminField label="Name" value={draft.name} onChange={(v) => setDraft({ ...draft, name: v })} required />
 
           <label className="block">
             <span className={labelClassName}>Category *</span>
@@ -111,56 +140,60 @@ export function DayStonesAdmin() {
             </select>
           </label>
 
-          <Field
+          <AdminField
             label="Date Lifted"
             value={draft.liftedAt}
             onChange={(v) => setDraft({ ...draft, liftedAt: v })}
             placeholder="April 22, 2026"
             required
           />
-          <Field
+          <AdminField
             label="Notes"
             value={draft.notes ?? ""}
             onChange={(v) => setDraft({ ...draft, notes: v })}
             textarea
           />
 
-          <label className="block">
-            <span className={labelClassName}>Photo (optional)</span>
-            <input
-              ref={createPhotoRef}
-              type="file"
-              accept="image/*"
-              onChange={pickCreatePhoto}
-              className={`${inputClassName} file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-primary file:text-primary-foreground file:text-xs file:uppercase file:tracking-wider`}
-            />
-            {createPhoto && (
-              <p className="text-muted-foreground text-xs mt-1">{createPhoto.name}</p>
-            )}
-          </label>
+          <CollapsiblePanel
+            label="Photo (optional)"
+            hint={createPhoto ? createPhoto.name : "Tap to add"}
+            open={photoOpen}
+            onOpenChange={setPhotoOpen}
+          >
+            <div className="space-y-2">
+              <input
+                ref={createPhotoRef}
+                type="file"
+                accept="image/*"
+                onChange={pickCreatePhoto}
+                className={adminFileInputClassName}
+              />
+              {createPhotoPreview && (
+                <img
+                  src={createPhotoPreview}
+                  alt="Selected lifter photo preview"
+                  className="w-20 h-20 rounded-lg object-cover ring-1 ring-gold/30"
+                />
+              )}
+            </div>
+          </CollapsiblePanel>
 
-          {formError && <p className="text-sm text-destructive">{formError}</p>}
+          <AdminFormError message={formError} />
 
           <GoldButton type="submit" variant="flat" disabled={submitting} className="w-full">
             {submitting ? "Saving…" : "Add to Record Book"}
           </GoldButton>
-        </form>
-      </GlassCard>
+        </AdminForm>
+      </AdminFormCard>
 
-      <GlassCard className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-display text-lg font-light uppercase tracking-wider">All Entries</h2>
-          <button onClick={refresh} className="text-xs text-muted-foreground hover:text-gold-bright uppercase tracking-wider font-display">
-            Refresh
-          </button>
-        </div>
-
-        {loading && <p className="text-muted-foreground text-sm">Loading…</p>}
-        {error && <p className="text-destructive text-sm">{error}</p>}
-        {!loading && entries.length === 0 && (
-          <p className="text-muted-foreground text-sm">No lifters recorded yet.</p>
-        )}
-
+      <AdminListCard
+        title="All Entries"
+        onRefresh={refresh}
+        loading={loading}
+        error={error}
+        empty="No lifters recorded yet."
+        isEmpty={entries.length === 0}
+      >
         <div className="space-y-6">
           <EntryGroup
             title={CATEGORY_LABELS.straps}
@@ -177,8 +210,8 @@ export function DayStonesAdmin() {
             onPhotoRemove={handlePhotoRemove}
           />
         </div>
-      </GlassCard>
-    </div>
+      </AdminListCard>
+    </AdminPageGrid>
   );
 }
 
@@ -199,7 +232,7 @@ function EntryGroup({
 
   return (
     <div>
-      <h3 className="text-xs uppercase tracking-wider text-muted-foreground mb-2 font-display">{title}</h3>
+      <AdminGroupHeading>{title}</AdminGroupHeading>
       <div className="space-y-3" role="list">
         {entries.map((entry) => (
           <div key={entry.id} role="listitem">
@@ -234,6 +267,7 @@ function EntryActions({
   onPhotoRemove: () => void;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const [photoOpen, setPhotoOpen] = useState(false);
 
   function pickFile(e: ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
@@ -247,79 +281,38 @@ function EntryActions({
   }
 
   return (
-    <>
-      <input
-        ref={fileRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={pickFile}
-      />
-      <button
-        type="button"
-        onClick={() => fileRef.current?.click()}
-        className="inline-flex items-center gap-1 text-xs uppercase tracking-wider text-gold hover:text-gold-bright font-display"
+    <div className="flex flex-col items-end gap-2 w-full sm:w-auto">
+      <CollapsiblePanel
+        label="Photo"
+        hint={entry.photoUrl ? "Attached" : "Tap to add"}
+        open={photoOpen}
+        onOpenChange={setPhotoOpen}
+        compact
       >
-        <Upload className="w-3.5 h-3.5" />
-        {entry.photoUrl ? "Change photo" : "Add photo"}
-      </button>
-      {entry.photoUrl && (
-        <button
-          type="button"
-          onClick={onPhotoRemove}
-          className="inline-flex items-center gap-1 text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground font-display"
-        >
-          <X className="w-3.5 h-3.5" />
-          Remove photo
-        </button>
-      )}
-      <button
-        type="button"
-        onClick={onDelete}
-        className="inline-flex items-center gap-1 text-xs uppercase tracking-wider text-muted-foreground hover:text-destructive font-display"
-      >
-        <Trash2 className="w-3.5 h-3.5" />
-        Delete
-      </button>
-    </>
-  );
-}
+        <div className="space-y-2">
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={pickFile} />
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="inline-flex items-center gap-1 text-xs uppercase tracking-wider text-gold hover:text-gold-bright font-display"
+          >
+            <Upload className="w-3.5 h-3.5" />
+            {entry.photoUrl ? "Change photo" : "Add photo"}
+          </button>
+          {entry.photoUrl && (
+            <button
+              type="button"
+              onClick={onPhotoRemove}
+              className="inline-flex items-center gap-1 text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground font-display"
+            >
+              <X className="w-3.5 h-3.5" />
+              Remove photo
+            </button>
+          )}
+        </div>
+      </CollapsiblePanel>
 
-function Field({
-  label,
-  value,
-  onChange,
-  placeholder,
-  required,
-  textarea,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-  required?: boolean;
-  textarea?: boolean;
-}) {
-  return (
-    <label className="block">
-      <span className={labelClassName}>{label}{required ? " *" : ""}</span>
-      {textarea ? (
-        <textarea
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          rows={3}
-          className={inputClassName}
-        />
-      ) : (
-        <input
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          required={required}
-          className={inputClassName}
-        />
-      )}
-    </label>
+      <AdminDeleteButton onClick={onDelete} />
+    </div>
   );
 }

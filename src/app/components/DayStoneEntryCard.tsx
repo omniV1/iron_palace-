@@ -2,6 +2,8 @@ import { useState, type ReactNode } from "react";
 import type { DayStoneEntry } from "../api";
 import { CATEGORY_ACCENTS, CATEGORY_LABELS, type DayStoneCategory } from "../dayStones/constants";
 import { getInitials } from "../dayStones/utils";
+import { CollapsiblePanel } from "./CollapsiblePanel";
+import { DayStonesFramedImage } from "./DayStonesFramedImage";
 import { cn } from "./ui/utils";
 
 type Variant = "compact" | "full" | "admin";
@@ -17,16 +19,23 @@ function Portrait({
   entry,
   size,
   portraitClass,
+  showPhoto = true,
 }: {
   entry: DayStoneEntry;
-  size: "sm" | "md";
+  size: "sm" | "md" | "lg";
   portraitClass: string;
+  showPhoto?: boolean;
 }) {
   const [broken, setBroken] = useState(false);
-  const dim = size === "sm" ? "w-12 h-12 text-sm" : "w-16 h-16 text-base";
+  const dim =
+    size === "sm"
+      ? "w-12 h-12 text-sm rounded-lg"
+      : size === "md"
+        ? "w-16 h-16 text-base rounded-lg"
+        : "w-20 h-20 md:w-24 md:h-24 text-lg rounded-xl";
   const initials = getInitials(entry.name);
 
-  if (entry.photoUrl && !broken) {
+  if (entry.photoUrl && !broken && showPhoto) {
     return (
       <img
         src={entry.photoUrl}
@@ -34,7 +43,7 @@ function Portrait({
         loading="lazy"
         decoding="async"
         onError={() => setBroken(true)}
-        className={cn(dim, "rounded-lg object-cover shrink-0 ring-1", portraitClass)}
+        className={cn(dim, "object-cover shrink-0 ring-1", portraitClass)}
       />
     );
   }
@@ -43,7 +52,7 @@ function Portrait({
     <div
       className={cn(
         dim,
-        "rounded-lg shrink-0 flex items-center justify-center font-medium ring-1",
+        "shrink-0 flex items-center justify-center font-medium ring-1",
         portraitClass,
       )}
       aria-hidden={!!entry.photoUrl}
@@ -94,32 +103,59 @@ export function DayStoneEntryCard({ entry, variant = "full", category = entry.ca
   }
 
   return (
-    <div className="group flex items-start gap-4 border-b border-border-subtle pb-4 last:border-0 last:pb-0 rounded-lg px-2 -mx-2 transition-colors hover:bg-white/[0.02]">
-      <Portrait entry={entry} size="md" portraitClass={portraitClass} />
-      <div className="min-w-0 flex-1">
-        <p className="font-display font-medium text-lg group-hover:text-gold-bright/95 transition-colors">{entry.name}</p>
-        <p className="text-muted-foreground text-sm mt-0.5 tabular-nums">{entry.liftedAt}</p>
-        {entry.notes && (
-          <>
-            <p
-              className={`text-muted-foreground/80 text-sm mt-1 whitespace-pre-line ${
-                notesExpanded ? "" : "line-clamp-2"
-              }`}
-            >
-              {entry.notes}
-            </p>
-            {hasLongNotes && (
-              <button
-                type="button"
-                onClick={() => setNotesExpanded((v) => !v)}
-                className="text-gold/80 hover:text-gold-bright text-xs mt-1 uppercase tracking-wider font-display"
+    <div className="group border-b border-border-subtle pb-4 last:border-0 last:pb-0 rounded-lg px-2 -mx-2 transition-colors hover:bg-white/[0.02]">
+      <div className="flex items-start gap-4">
+        <Portrait entry={entry} size="md" portraitClass={portraitClass} showPhoto={!entry.photoUrl} />
+        <div className="min-w-0 flex-1">
+          <p className="font-display font-medium text-lg group-hover:text-gold-bright/95 transition-colors">{entry.name}</p>
+          <p className="text-muted-foreground text-sm mt-0.5 tabular-nums">{entry.liftedAt}</p>
+          {entry.notes && (
+            <>
+              <p
+                className={`text-muted-foreground/80 text-sm mt-1 whitespace-pre-line ${
+                  notesExpanded ? "" : "line-clamp-2"
+                }`}
               >
-                {notesExpanded ? "Show less" : "Read more"}
-              </button>
-            )}
-          </>
-        )}
+                {entry.notes}
+              </p>
+              {hasLongNotes && (
+                <button
+                  type="button"
+                  onClick={() => setNotesExpanded((v) => !v)}
+                  className="text-gold/80 hover:text-gold-bright text-xs mt-1 uppercase tracking-wider font-display"
+                >
+                  {notesExpanded ? "Show less" : "Read more"}
+                </button>
+              )}
+            </>
+          )}
+        </div>
       </div>
+
+      {entry.photoUrl && (
+        <div className="mt-4">
+          <LifterPhotoPanel entry={entry} />
+        </div>
+      )}
     </div>
+  );
+}
+
+function LifterPhotoPanel({ entry }: { entry: DayStoneEntry }) {
+  const [broken, setBroken] = useState(false);
+
+  if (!entry.photoUrl || broken) return null;
+
+  return (
+    <CollapsiblePanel label="Photo" hint="Tap to view">
+      <div className="relative w-full max-w-sm mx-auto">
+        <DayStonesFramedImage
+          src={entry.photoUrl}
+          alt={entry.name}
+          className="shadow-[0_24px_70px_rgba(0,0,0,0.65)]"
+          onError={() => setBroken(true)}
+        />
+      </div>
+    </CollapsiblePanel>
   );
 }
