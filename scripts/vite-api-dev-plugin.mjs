@@ -40,8 +40,8 @@ function resolveApiRoute(urlPath) {
     return { file: indexFile, id: null };
   }
 
-  // Nested [id]/*.js: e.g. /api/day-stones/:id/photo
-  if (segments.length >= 3) {
+  // Nested [id]/*.js: e.g. /api/day-stones/:id/photo (not /api/day-stones/photos/:id)
+  if (segments.length >= 3 && segments[segments.length - 1] === "photo") {
     const id = segments[segments.length - 2];
     const nestedName = segments[segments.length - 1];
     const nestedFile = path.join(API_ROOT, ...segments.slice(0, -2), "[id]", `${nestedName}.js`);

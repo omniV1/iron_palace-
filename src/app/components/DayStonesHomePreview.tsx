@@ -51,17 +51,20 @@ function TeaserBook({ category, entries, totalCount }: BookProps) {
             return (
               <div
                 key={entry.id}
-                className="flex min-h-[3rem] items-center gap-3 border-b border-border-subtle py-3 last:border-0"
+                className="flex min-h-[3.5rem] items-center gap-3 border-b border-border-subtle py-3 last:border-0"
               >
                 <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", accentDot)} aria-hidden />
-                <span className="text-muted-foreground text-sm tabular-nums">{entry.liftedAt}</span>
+                <div className="min-w-0">
+                  <p className="truncate font-display text-sm font-medium">{entry.name}</p>
+                  <p className="text-muted-foreground text-xs tabular-nums">{entry.liftedAt}</p>
+                </div>
               </div>
             );
           }
           return (
             <div
               key={`empty-${index}`}
-              className="min-h-[3rem] border-b border-dashed border-border-subtle/40 py-3 last:border-0"
+              className="min-h-[3.5rem] border-b border-dashed border-border-subtle/40 py-3 last:border-0"
               aria-hidden
             />
           );
@@ -69,7 +72,7 @@ function TeaserBook({ category, entries, totalCount }: BookProps) {
       </div>
 
       <p className="mt-4 text-center font-display text-[10px] uppercase tracking-widest text-muted-foreground/70">
-        Recent lifts — see names in the record book
+        Recent lifts — view full record books
       </p>
     </GlassCard>
   );

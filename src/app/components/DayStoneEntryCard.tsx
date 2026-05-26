@@ -105,7 +105,7 @@ export function DayStoneEntryCard({ entry, variant = "full", category = entry.ca
   return (
     <div className="group border-b border-border-subtle pb-4 last:border-0 last:pb-0 rounded-lg px-2 -mx-2 transition-colors hover:bg-white/[0.02]">
       <div className="flex items-start gap-4">
-        <Portrait entry={entry} size="md" portraitClass={portraitClass} showPhoto={!entry.photoUrl} />
+        <Portrait entry={entry} size="md" portraitClass={portraitClass} />
         <div className="min-w-0 flex-1">
           <p className="font-display font-medium text-lg group-hover:text-gold-bright/95 transition-colors">{entry.name}</p>
           <p className="text-muted-foreground text-sm mt-0.5 tabular-nums">{entry.liftedAt}</p>
@@ -147,11 +147,11 @@ function LifterPhotoPanel({ entry }: { entry: DayStoneEntry }) {
   if (!entry.photoUrl || broken) return null;
 
   return (
-    <CollapsiblePanel label="Photo" hint="Tap to view">
-      <div className="relative w-full max-w-sm mx-auto">
+    <CollapsiblePanel label="Lifter photo" hint="Tap to expand" defaultOpen>
+      <div className="relative mx-auto w-full max-w-sm">
         <DayStonesFramedImage
           src={entry.photoUrl}
-          alt={entry.name}
+          alt={`${entry.name} lifting the Day Stones`}
           className="shadow-[0_24px_70px_rgba(0,0,0,0.65)]"
           onError={() => setBroken(true)}
         />
