@@ -1,11 +1,12 @@
 import { getDb } from "../_lib/mongo.js";
 import { requireAdmin } from "../_lib/auth.js";
 import { readJsonBody, readRawBody } from "../_lib/body.js";
-import { uploadPhoto, streamPhoto } from "../_lib/gridfsPhoto.js";
+import { uploadPhoto, streamPhotoFromBuckets } from "../_lib/gridfsPhoto.js";
 import { sendError } from "../_lib/respond.js";
 import {
   COLLECTION,
   PHOTO_BUCKET,
+  PHOTO_READ_BUCKETS,
   MAX_PHOTO_UPLOAD,
   normalizeEntry,
   serializeEntry,
@@ -20,7 +21,8 @@ export const config = {
 function getSlug(req) {
   const raw = req.query.slug;
   if (raw == null || raw === "") return [];
-  return Array.isArray(raw) ? raw : [raw];
+  const parts = Array.isArray(raw) ? raw : [raw];
+  return parts.flatMap((segment) => String(segment).split("/").filter(Boolean));
 }
 
 export default async function handler(req, res) {
@@ -131,7 +133,7 @@ export default async function handler(req, res) {
 
     if (slug.length === 2 && slug[0] === "photos" && req.method === "GET") {
       const photoId = parseObjectId(slug[1]);
-      const file = await streamPhoto(PHOTO_BUCKET, photoId, res);
+      const file = await streamPhotoFromBuckets(PHOTO_READ_BUCKETS, photoId, res);
       if (!file) return res.status(404).json({ error: "not found" });
       return;
     }

@@ -21,12 +21,28 @@ export async function uploadPhoto(bucketName, buffer, { filename, contentType, m
   return uploadStream.id;
 }
 
-export async function streamPhoto(bucketName, id, res) {
+export async function findPhotoFile(id, bucketNames) {
   const objectId = toObjectId(id);
   const db = await getDb();
-  const file = await db.collection(`${bucketName}.files`).findOne({ _id: objectId });
-  if (!file) return null;
 
+  for (const bucketName of bucketNames) {
+    const file = await db.collection(`${bucketName}.files`).findOne({ _id: objectId });
+    if (file) return { file, bucketName };
+  }
+
+  return null;
+}
+
+export async function streamPhoto(bucketName, id, res) {
+  return streamPhotoFromBuckets([bucketName], id, res);
+}
+
+export async function streamPhotoFromBuckets(bucketNames, id, res) {
+  const objectId = toObjectId(id);
+  const found = await findPhotoFile(objectId, bucketNames);
+  if (!found) return null;
+
+  const { file, bucketName } = found;
   const contentType = file.metadata?.contentType ?? file.contentType ?? "application/octet-stream";
   res.setHeader("Content-Type", contentType);
   res.setHeader("Content-Length", String(file.length));
@@ -45,4 +61,11 @@ export async function deletePhotoById(bucketName, id) {
   if (!id) return;
   const bucket = await getBucket(bucketName);
   await bucket.delete(toObjectId(id));
+}
+
+export async function deletePhotoFromBuckets(bucketNames, id) {
+  const found = await findPhotoFile(id, bucketNames);
+  if (!found) return false;
+  await deletePhotoById(found.bucketName, id);
+  return true;
 }

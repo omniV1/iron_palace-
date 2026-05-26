@@ -1,14 +1,25 @@
 import { ObjectId } from "mongodb";
-import { deletePhotoById } from "./gridfsPhoto.js";
+import { deletePhotoFromBuckets } from "./gridfsPhoto.js";
 
 export const PHOTO_BUCKET = "day_stones_photos";
+/** Legacy lifter photos may still live in the gallery GridFS bucket. */
+export const PHOTO_READ_BUCKETS = [PHOTO_BUCKET, "gallery"];
 export const COLLECTION = "day_stones";
 export const MAX_PHOTO_UPLOAD = 4 * 1024 * 1024;
 
 export function photoUrlFromId(photoId) {
-  if (!photoId) return undefined;
-  const id = photoId instanceof ObjectId ? photoId.toString() : String(photoId);
+  const id = photoIdToString(photoId);
   return id ? `/api/day-stones/photos/${id}` : undefined;
+}
+
+function photoIdToString(photoId) {
+  if (!photoId) return undefined;
+  if (photoId instanceof ObjectId) return photoId.toString();
+  if (typeof photoId === "string") return photoId;
+  if (typeof photoId === "object" && photoId !== null && "$oid" in photoId) {
+    return String(photoId.$oid);
+  }
+  return String(photoId);
 }
 
 export function serializeEntry(doc) {
@@ -23,7 +34,7 @@ export function serializeEntry(doc) {
 export async function deleteEntryPhoto(photoId) {
   if (!photoId) return;
   try {
-    await deletePhotoById(PHOTO_BUCKET, photoId);
+    await deletePhotoFromBuckets(PHOTO_READ_BUCKETS, photoId);
   } catch (err) {
     console.error("[day-stones] delete photo", err);
   }
