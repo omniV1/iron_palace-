@@ -1,5 +1,6 @@
 import { motion } from "motion/react";
 import { SectionHeading } from "./SectionHeading";
+import { CollapsiblePanel } from "./CollapsiblePanel";
 import { DayStonesHeroImage } from "./DayStonesHeroImage";
 import { DayStonesWeightGrid } from "./DayStonesWeightGrid";
 import { DayStonesCelticDivider } from "./DayStonesCelticDivider";
@@ -42,11 +43,16 @@ export function DayStonesIntro({ variant }: Props) {
 
         {isPage ? (
           <>
-            <DayStonesHeroImage
-              src={DAY_STONES_HERO.src}
-              alt={DAY_STONES_HERO.alt}
-              className="mb-6"
-            />
+            <CollapsiblePanel
+              label="The setup"
+              hint="Tap to view the stones"
+              className="mb-6 max-w-xl mx-auto text-left"
+            >
+              <DayStonesHeroImage
+                src={DAY_STONES_HERO.src}
+                alt={DAY_STONES_HERO.alt}
+              />
+            </CollapsiblePanel>
             <p className="text-muted-foreground text-sm max-w-xl mx-auto leading-relaxed">
               {DAY_STONES_TAGLINE_DETAIL}
             </p>

@@ -147,7 +147,7 @@ function LifterPhotoPanel({ entry }: { entry: DayStoneEntry }) {
   if (!entry.photoUrl || broken) return null;
 
   return (
-    <CollapsiblePanel label="Lifter photo" hint="Tap to expand" defaultOpen>
+    <CollapsiblePanel label="Lifter photo" hint="Tap to expand">
       <div className="relative mx-auto w-full max-w-sm">
         <DayStonesFramedImage
           src={entry.photoUrl}
