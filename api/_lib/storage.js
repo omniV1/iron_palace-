@@ -1,6 +1,16 @@
 import { ObjectId } from "mongodb";
 import { getDb, getBucket } from "./mongo.js";
 import { readRawBody } from "./body.js";
+import {
+  cleanupOrphanedFiles,
+  hasFileChunks,
+  rollbackUpload,
+  uploadIntegrityError,
+  verifyUploadedFile,
+} from "./gridfsIntegrity.js";
+
+// Gallery/library are served at /api/gallery and /api/library — do not rewrite those
+// paths to /api/storage/* in vercel.json (causes broken or missing photo streams).
 
 export const MAX_UPLOAD = 4 * 1024 * 1024; // 4 MB — Vercel Hobby request body cap is 4.5 MB
 
@@ -78,13 +88,9 @@ export function safeFilename(name) {
   return String(name || "download").replace(/[\r\n"\\]/g, "_");
 }
 
-async function hasFileChunks(bucketName, id) {
-  const db = await getDb();
-  const chunk = await db.collection(`${bucketName}.chunks`).findOne({ files_id: id });
-  return chunk != null;
-}
-
 export async function listFiles(config) {
+  await cleanupOrphanedFiles(config.name);
+
   const db = await getDb();
   const files = await db
     .collection(`${config.name}.files`)
@@ -117,20 +123,37 @@ export async function uploadFile(config, req) {
   const filename = decodeURIComponent(req.headers["x-filename"] || "upload");
   const extraMeta = config.buildMetadata(req.headers, filename);
   const buf = await readRawBody(req, MAX_UPLOAD);
+  if (!buf.length) {
+    const err = new Error("empty upload");
+    err.statusCode = 400;
+    throw err;
+  }
+
   const bucket = await getBucket(config.name);
   const uploadStream = bucket.openUploadStream(filename, {
     contentType,
     metadata: { contentType, ...extraMeta },
   });
 
-  await new Promise((resolve, reject) => {
-    uploadStream.on("error", reject);
-    uploadStream.on("finish", resolve);
-    uploadStream.end(buf);
-  });
+  let uploadId;
+  try {
+    await new Promise((resolve, reject) => {
+      uploadStream.on("error", reject);
+      uploadStream.on("finish", resolve);
+      uploadStream.end(buf);
+    });
+    uploadId = uploadStream.id;
+  } catch (err) {
+    if (uploadStream.id) await rollbackUpload(config.name, uploadStream.id);
+    throw err;
+  }
 
-  const db = await getDb();
-  return db.collection(`${config.name}.files`).findOne({ _id: uploadStream.id });
+  const file = await verifyUploadedFile(config.name, uploadId, buf.length);
+  if (!file) {
+    await rollbackUpload(config.name, uploadId);
+    throw uploadIntegrityError();
+  }
+  return file;
 }
 
 export async function getFileDoc(config, id) {
@@ -158,7 +181,7 @@ export async function streamFile(config, id, res, { download = false } = {}) {
     bucket
       .openDownloadStream(id)
       .on("error", (err) => {
-        console.error(`[api/storage/${config.name}] stream`, err);
+        console.error(`[gridfs/${config.name}] stream`, err);
         reject(err);
       })
       .pipe(res)

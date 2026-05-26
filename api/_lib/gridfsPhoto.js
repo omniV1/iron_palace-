@@ -1,30 +1,49 @@
 import { ObjectId } from "mongodb";
 import { getBucket, getDb } from "./mongo.js";
+import {
+  hasFileChunks,
+  rollbackUpload,
+  uploadIntegrityError,
+  verifyUploadedFile,
+} from "./gridfsIntegrity.js";
 
 function toObjectId(id) {
   return id instanceof ObjectId ? id : new ObjectId(String(id));
 }
 
 export async function uploadPhoto(bucketName, buffer, { filename, contentType, metadata = {} }) {
+  if (!buffer?.length) {
+    const err = new Error("empty upload");
+    err.statusCode = 400;
+    throw err;
+  }
+
   const bucket = await getBucket(bucketName);
   const uploadStream = bucket.openUploadStream(filename, {
     contentType,
     metadata: { contentType, ...metadata },
   });
 
-  await new Promise((resolve, reject) => {
-    uploadStream.on("error", reject);
-    uploadStream.on("finish", resolve);
-    uploadStream.end(buffer);
-  });
+  let uploadId;
+  try {
+    await new Promise((resolve, reject) => {
+      uploadStream.on("error", reject);
+      uploadStream.on("finish", resolve);
+      uploadStream.end(buffer);
+    });
+    uploadId = uploadStream.id;
+  } catch (err) {
+    if (uploadStream.id) await rollbackUpload(bucketName, uploadStream.id);
+    throw err;
+  }
 
-  return uploadStream.id;
-}
+  const file = await verifyUploadedFile(bucketName, uploadId, buffer.length);
+  if (!file) {
+    await rollbackUpload(bucketName, uploadId);
+    throw uploadIntegrityError();
+  }
 
-async function hasFileChunks(bucketName, id) {
-  const db = await getDb();
-  const chunk = await db.collection(`${bucketName}.chunks`).findOne({ files_id: id });
-  return chunk != null;
+  return uploadId;
 }
 
 export async function findPhotoFile(id, bucketNames) {

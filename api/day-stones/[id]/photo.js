@@ -2,6 +2,7 @@ import { getDb } from "../../_lib/mongo.js";
 import { requireAdmin } from "../../_lib/auth.js";
 import { readRawBody } from "../../_lib/body.js";
 import { uploadPhoto } from "../../_lib/gridfsPhoto.js";
+import { rollbackUpload } from "../../_lib/gridfsIntegrity.js";
 import { sendError } from "../../_lib/respond.js";
 import {
   COLLECTION,
@@ -35,24 +36,37 @@ export default async function handler(req, res) {
 
       const filename = decodeURIComponent(req.headers["x-filename"] || "lifter-photo");
       const buf = await readRawBody(req, MAX_PHOTO_UPLOAD);
-      const photoId = await uploadPhoto(PHOTO_BUCKET, buf, {
-        filename,
-        contentType,
-        metadata: { entryId: entryId.toString() },
-      });
+      const oldPhotoId = entry.photoId;
+      let photoId;
 
-      if (entry.photoId) {
-        await deleteEntryPhoto(entry.photoId);
+      try {
+        photoId = await uploadPhoto(PHOTO_BUCKET, buf, {
+          filename,
+          contentType,
+          metadata: { entryId: entryId.toString() },
+        });
+
+        const now = new Date();
+        const result = await col.findOneAndUpdate(
+          { _id: entryId },
+          { $set: { photoId, updatedAt: now } },
+          { returnDocument: "after" },
+        );
+        const doc = result?.value ?? result;
+        if (!doc) {
+          await rollbackUpload(PHOTO_BUCKET, photoId);
+          return res.status(404).json({ error: "not found" });
+        }
+
+        if (oldPhotoId) {
+          await deleteEntryPhoto(oldPhotoId);
+        }
+
+        return res.status(200).json({ entry: serializeEntry(doc) });
+      } catch (uploadErr) {
+        if (photoId) await rollbackUpload(PHOTO_BUCKET, photoId);
+        throw uploadErr;
       }
-
-      const now = new Date();
-      const result = await col.findOneAndUpdate(
-        { _id: entryId },
-        { $set: { photoId, updatedAt: now } },
-        { returnDocument: "after" },
-      );
-      const doc = result?.value ?? result;
-      return res.status(200).json({ entry: serializeEntry(doc) });
     }
 
     if (req.method === "DELETE") {
