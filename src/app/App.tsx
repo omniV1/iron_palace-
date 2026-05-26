@@ -131,6 +131,8 @@ export default function App() {
     return {
       withStraps: previewEntries(withStraps),
       withoutStraps: previewEntries(withoutStraps),
+      withStrapsTotal: withStraps.length,
+      withoutStrapsTotal: withoutStraps.length,
     };
   }, [dayStoneEntries]);
 
@@ -580,16 +582,23 @@ export default function App() {
             <DayStonesIntro variant="home" />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+          <div className="mx-auto grid max-w-4xl grid-cols-1 items-stretch gap-6 md:grid-cols-2">
+            <motion.div
+              className="h-full"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
               <DayStoneRecordBook
                 title={CATEGORY_LABELS.straps}
                 category="straps"
                 entries={dayStonesPreview.withStraps}
-                variant="compact"
+                totalCount={dayStonesPreview.withStrapsTotal}
+                variant="teaser"
               />
             </motion.div>
             <motion.div
+              className="h-full"
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -599,7 +608,8 @@ export default function App() {
                 title={CATEGORY_LABELS.no_straps}
                 category="no_straps"
                 entries={dayStonesPreview.withoutStraps}
-                variant="compact"
+                totalCount={dayStonesPreview.withoutStrapsTotal}
+                variant="teaser"
               />
             </motion.div>
           </div>
