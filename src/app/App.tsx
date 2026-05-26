@@ -11,11 +11,8 @@ import { useEvents } from "./hooks/useEvents";
 import { useGallery } from "./hooks/useGallery";
 import { useLibrary } from "./hooks/useLibrary";
 import { useDayStones } from "./hooks/useDayStones";
-import { DayStoneRecordBook } from "./components/DayStoneRecordBook";
 import { DayStonesIntro } from "./components/DayStonesIntro";
-import {
-  CATEGORY_LABELS,
-} from "./dayStones/constants";
+import { DayStonesHomePreview } from "./components/DayStonesHomePreview";
 import { previewEntries, splitByCategory } from "./dayStones/utils";
 
 import imgMerchDragon from "../imports/Group2/9fe969f07b1189f5a7e8d627018c5bf063261cab.png?w=800&format=webp&quality=80";
@@ -582,37 +579,12 @@ export default function App() {
             <DayStonesIntro variant="home" />
           </div>
 
-          <div className="mx-auto grid max-w-4xl grid-cols-1 items-stretch gap-6 md:grid-cols-2">
-            <motion.div
-              className="h-full"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-            >
-              <DayStoneRecordBook
-                title={CATEGORY_LABELS.straps}
-                category="straps"
-                entries={dayStonesPreview.withStraps}
-                totalCount={dayStonesPreview.withStrapsTotal}
-                variant="teaser"
-              />
-            </motion.div>
-            <motion.div
-              className="h-full"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-            >
-              <DayStoneRecordBook
-                title={CATEGORY_LABELS.no_straps}
-                category="no_straps"
-                entries={dayStonesPreview.withoutStraps}
-                totalCount={dayStonesPreview.withoutStrapsTotal}
-                variant="teaser"
-              />
-            </motion.div>
-          </div>
+          <DayStonesHomePreview
+            withStraps={dayStonesPreview.withStraps}
+            withoutStraps={dayStonesPreview.withoutStraps}
+            withStrapsTotal={dayStonesPreview.withStrapsTotal}
+            withoutStrapsTotal={dayStonesPreview.withoutStrapsTotal}
+          />
 
           <div className="text-center mt-10">
             <a
