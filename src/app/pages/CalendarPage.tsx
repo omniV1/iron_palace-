@@ -110,7 +110,7 @@ export default function CalendarPage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-16">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <SectionHeading title="Events Calendar" subtitle="Click any date to see events" />
+          <SectionHeading title="Events Calendar" subtitle="Gold days have events — tap to see details" />
         </motion.div>
 
         {loading && <p className="text-muted-foreground text-sm text-center">Loading events…</p>}
@@ -137,6 +137,17 @@ export default function CalendarPage() {
             </GlassCard>
 
             <GlassCard className="p-4 md:p-6 overflow-hidden">
+              <div className="mb-4 flex flex-wrap items-center gap-4 text-xs md:text-sm text-muted-foreground">
+                <span className="inline-flex items-center gap-2">
+                  <span className="h-3 w-3 rounded border border-gold bg-gold-muted" aria-hidden />
+                  Event scheduled
+                </span>
+                <span className="inline-flex items-center gap-2">
+                  <span className="h-3 w-3 rounded border border-gold bg-gold/20 ring-1 ring-gold" aria-hidden />
+                  Today
+                </span>
+              </div>
+
               <div className="grid grid-cols-7 gap-1 md:gap-2 mb-2">
                 {daysOfWeek.map((day) => (
                   <div
@@ -149,40 +160,64 @@ export default function CalendarPage() {
               </div>
 
               <div className="grid grid-cols-7 gap-1 md:gap-2">
-                {calendarDays.map((day, idx) => (
+                {calendarDays.map((day, idx) => {
+                  const hasEvents = day.isCurrentMonth && day.events.length > 0;
+
+                  return (
                   <motion.button
                     key={idx}
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: idx * 0.005 }}
-                    onClick={() => day.events.length > 0 && setSelectedDay(day)}
-                    disabled={!day.isCurrentMonth || day.events.length === 0}
+                    onClick={() => hasEvents && setSelectedDay(day)}
+                    disabled={!hasEvents}
+                    aria-label={
+                      hasEvents
+                        ? `${day.dayOfMonth}: ${day.events.map((e) => e.title).join(", ")}`
+                        : `${day.dayOfMonth}`
+                    }
                     className={`
-                      relative aspect-square p-1 md:p-2 rounded-lg border transition-all text-sm md:text-base
+                      relative flex flex-col items-start gap-0.5 aspect-square p-1.5 md:p-2 rounded-lg border transition-all text-left overflow-hidden
                       ${!day.isCurrentMonth ? "opacity-30 cursor-default" : ""}
-                      ${day.isToday ? "border-gold bg-gold-muted" : "border-border-subtle"}
-                      ${day.events.length > 0 && day.isCurrentMonth
-                        ? "hover:border-border-gold hover:bg-white/5 cursor-pointer"
-                        : "cursor-default"
+                      ${hasEvents
+                        ? "border-gold bg-gold-muted shadow-[inset_0_0_0_1px_rgba(217,119,6,0.2)] cursor-pointer hover:border-gold-bright hover:bg-gold/20"
+                        : day.isToday
+                          ? "border-gold bg-gold/10"
+                          : "border-border-subtle cursor-default"
                       }
                       ${selectedDay?.date.getTime() === day.date.getTime()
-                        ? "bg-gold/20 border-gold"
+                        ? "ring-2 ring-gold-bright bg-gold/25 border-gold-bright"
                         : ""
                       }
                     `}
                   >
-                    <span className={`block ${day.isToday ? "font-bold text-gold" : ""}`}>
-                      {day.dayOfMonth}
-                    </span>
-                    {day.events.length > 0 && day.isCurrentMonth && (
-                      <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">
-                        {day.events.slice(0, 3).map((_, i) => (
-                          <div key={i} className="w-1 h-1 rounded-full bg-gold" />
-                        ))}
+                    <div className="flex w-full items-start justify-between gap-1">
+                      <span
+                        className={`font-display text-sm md:text-base leading-none ${
+                          hasEvents ? "font-semibold text-gold-bright" : day.isToday ? "font-bold text-gold" : ""
+                        }`}
+                      >
+                        {day.dayOfMonth}
+                      </span>
+                      {hasEvents && (
+                        <span className="shrink-0 rounded-full bg-gold px-1.5 py-0.5 text-[10px] font-display uppercase tracking-wide text-black">
+                          {day.events.length}
+                        </span>
+                      )}
+                    </div>
+                    {hasEvents && (
+                      <div className="mt-auto w-full space-y-0.5">
+                        <p className="truncate text-[10px] md:text-xs font-medium text-foreground leading-tight">
+                          {day.events[0].title}
+                        </p>
+                        {day.events.length > 1 && (
+                          <p className="text-[10px] text-gold-bright/80">+{day.events.length - 1} more</p>
+                        )}
                       </div>
                     )}
                   </motion.button>
-                ))}
+                  );
+                })}
               </div>
             </GlassCard>
 

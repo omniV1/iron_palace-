@@ -109,22 +109,20 @@ export default function App() {
     return defaultGalleryPhotos;
   }, [livePhotos]);
 
-  const thisMonthEvents = useMemo(() => {
+  const upcomingEvents = useMemo(() => {
     const now = new Date();
-    const month = now.getMonth();
-    const year = now.getFullYear();
-    return liveEvents.filter((e) => {
-      const t = Date.parse(e.date);
-      if (!Number.isFinite(t)) return false;
-      const d = new Date(t);
-      return d.getFullYear() === year && d.getMonth() === month && d >= new Date(year, month, now.getDate());
-    });
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return liveEvents
+      .filter((e) => {
+        const t = Date.parse(e.date);
+        if (!Number.isFinite(t)) return false;
+        const d = new Date(t);
+        const eventDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        return eventDay >= today;
+      })
+      .sort((a, b) => Date.parse(a.date) - Date.parse(b.date))
+      .slice(0, 3);
   }, [liveEvents]);
-
-  const currentMonthLabel = useMemo(
-    () => new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }),
-    [],
-  );
 
   const previewLibraryFiles = useMemo(() => libraryFiles.slice(0, 4), [libraryFiles]);
 
@@ -511,19 +509,16 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Upcoming Events — this month at a glance, with link to full calendar */}
+      {/* Upcoming Events — next three on the calendar */}
       <Section>
         <div className="max-w-7xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <SectionHeading
-              title="Upcoming Events"
-              subtitle={`What's happening this ${currentMonthLabel.split(" ")[0]}`}
-            />
+            <SectionHeading title="Upcoming Events" subtitle="What's coming up" />
           </motion.div>
 
-          {thisMonthEvents.length === 0 ? (
+          {upcomingEvents.length === 0 ? (
             <p className="text-center text-muted-foreground text-sm">
-              Nothing scheduled for {currentMonthLabel}.{" "}
+              No upcoming events scheduled.{" "}
               <a href="/calendar" className="text-gold hover:text-gold-bright underline underline-offset-2">
                 See the full calendar
               </a>
@@ -531,7 +526,7 @@ export default function App() {
             </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-              {thisMonthEvents.slice(0, 3).map((event, index) => (
+              {upcomingEvents.map((event, index) => (
                 <motion.div
                   key={event.id}
                   initial={{ opacity: 0, y: 30 }}
