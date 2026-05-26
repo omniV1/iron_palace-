@@ -17,7 +17,8 @@ export const config = {
 function getSlug(req) {
   const raw = req.query.slug;
   if (raw == null || raw === "") return [];
-  return Array.isArray(raw) ? raw : [raw];
+  const parts = Array.isArray(raw) ? raw : [raw];
+  return parts.flatMap((segment) => String(segment).split("/").filter(Boolean));
 }
 
 export default async function handler(req, res) {
