@@ -21,13 +21,21 @@ export async function uploadPhoto(bucketName, buffer, { filename, contentType, m
   return uploadStream.id;
 }
 
+async function hasFileChunks(bucketName, id) {
+  const db = await getDb();
+  const chunk = await db.collection(`${bucketName}.chunks`).findOne({ files_id: id });
+  return chunk != null;
+}
+
 export async function findPhotoFile(id, bucketNames) {
   const objectId = toObjectId(id);
   const db = await getDb();
 
   for (const bucketName of bucketNames) {
     const file = await db.collection(`${bucketName}.files`).findOne({ _id: objectId });
-    if (file) return { file, bucketName };
+    if (file && (await hasFileChunks(bucketName, objectId))) {
+      return { file, bucketName };
+    }
   }
 
   return null;
@@ -49,10 +57,17 @@ export async function streamPhotoFromBuckets(bucketNames, id, res) {
   res.setHeader("Cache-Control", "public, max-age=86400, immutable");
 
   const bucket = await getBucket(bucketName);
-  bucket.openDownloadStream(objectId).on("error", (err) => {
-    console.error(`[gridfsPhoto] stream ${bucketName}`, err);
-    if (!res.headersSent) res.end();
-  }).pipe(res);
+  await new Promise((resolve, reject) => {
+    bucket
+      .openDownloadStream(objectId)
+      .on("error", (err) => {
+        console.error(`[gridfsPhoto] stream ${bucketName}`, err);
+        reject(err);
+      })
+      .pipe(res)
+      .on("finish", resolve)
+      .on("error", reject);
+  });
 
   return file;
 }

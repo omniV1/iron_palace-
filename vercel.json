@@ -1,10 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
-    { "source": "/api/gallery", "destination": "/api/storage/gallery" },
-    { "source": "/api/gallery/:id", "destination": "/api/storage/gallery/:id" },
-    { "source": "/api/library", "destination": "/api/storage/library" },
-    { "source": "/api/library/:id", "destination": "/api/storage/library/:id" },
     { "source": "/admin", "destination": "/index.html" },
     { "source": "/admin/(.*)", "destination": "/index.html" },
     { "source": "/calendar", "destination": "/index.html" },

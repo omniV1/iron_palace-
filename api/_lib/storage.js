@@ -78,13 +78,31 @@ export function safeFilename(name) {
   return String(name || "download").replace(/[\r\n"\\]/g, "_");
 }
 
+async function hasFileChunks(bucketName, id) {
+  const db = await getDb();
+  const chunk = await db.collection(`${bucketName}.chunks`).findOne({ files_id: id });
+  return chunk != null;
+}
+
 export async function listFiles(config) {
   const db = await getDb();
   const files = await db
     .collection(`${config.name}.files`)
-    .find({})
-    .sort({ uploadDate: -1 })
+    .aggregate([
+      { $sort: { uploadDate: -1 } },
+      {
+        $lookup: {
+          from: `${config.name}.chunks`,
+          localField: "_id",
+          foreignField: "files_id",
+          as: "_chunks",
+        },
+      },
+      { $match: { "_chunks.0": { $exists: true } } },
+      { $project: { _chunks: 0 } },
+    ])
     .toArray();
+
   return files.map((file) => config.serialize(file, config));
 }
 
@@ -123,6 +141,7 @@ export async function getFileDoc(config, id) {
 export async function streamFile(config, id, res, { download = false } = {}) {
   const file = await getFileDoc(config, id);
   if (!file) return null;
+  if (!(await hasFileChunks(config.name, id))) return null;
 
   const contentType = file.metadata?.contentType ?? file.contentType ?? "application/octet-stream";
   res.setHeader("Content-Type", contentType);
@@ -135,10 +154,17 @@ export async function streamFile(config, id, res, { download = false } = {}) {
   }
 
   const bucket = await getBucket(config.name);
-  bucket.openDownloadStream(id).on("error", (err) => {
-    console.error(`[api/storage/${config.name}] stream`, err);
-    res.end();
-  }).pipe(res);
+  await new Promise((resolve, reject) => {
+    bucket
+      .openDownloadStream(id)
+      .on("error", (err) => {
+        console.error(`[api/storage/${config.name}] stream`, err);
+        reject(err);
+      })
+      .pipe(res)
+      .on("finish", resolve)
+      .on("error", reject);
+  });
   return file;
 }
 
