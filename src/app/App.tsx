@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ArrowRight, Calendar, ChevronLeft, ChevronRight, Download, Facebook, FileText, Instagram, Play, X } from "lucide-react";
+import { ArrowRight, Calendar, ChevronLeft, ChevronRight, Clock, Download, Facebook, FileText, Instagram, MapPin, Play, X } from "lucide-react";
 import { Section } from "./components/Section";
 import { SectionHeading } from "./components/SectionHeading";
 import { GlassCard } from "./components/GlassCard";
@@ -525,28 +525,35 @@ export default function App() {
               .
             </p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto items-stretch">
               {upcomingEvents.map((event, index) => (
                 <motion.div
                   key={event.id}
+                  className="h-full"
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
                   whileHover={{ y: -4, scale: 1.02 }}
                 >
-                  <GlassCard hover className="p-6 hover:shadow-xl hover:shadow-gold/10 transition-all duration-300">
-                    <div className="flex items-start gap-3 mb-4">
-                      <IconWell icon={Calendar} />
-                      <div>
-                        <h3 className="font-display text-xl font-medium mb-2">{event.title}</h3>
-                        <p className="text-muted-foreground text-sm mb-1">{event.date}</p>
-                        {event.time && <p className="text-muted-foreground text-sm mb-1">{event.time}</p>}
-                        {event.location && <p className="text-muted-foreground/70 text-sm">{event.location}</p>}
-                        {event.description && (
-                          <p className="text-muted-foreground text-sm mt-2 line-clamp-2 whitespace-pre-line">{event.description}</p>
-                        )}
-                      </div>
+                  <GlassCard
+                    hover
+                    className="flex h-full min-h-[220px] flex-col p-6 hover:shadow-xl hover:shadow-gold/10 transition-all duration-300"
+                  >
+                    <h3 className="font-display text-xl font-medium mb-auto">{event.title}</h3>
+                    <div className="mt-6 space-y-2.5 text-sm text-muted-foreground">
+                      <p className="flex items-center gap-2.5 min-h-[1.25rem]">
+                        <Calendar className="w-4 h-4 shrink-0 text-gold" aria-hidden />
+                        <span>{event.date}</span>
+                      </p>
+                      <p className="flex items-center gap-2.5 min-h-[1.25rem]">
+                        <Clock className="w-4 h-4 shrink-0 text-gold" aria-hidden />
+                        <span>{event.time || "Time TBA"}</span>
+                      </p>
+                      <p className="flex items-center gap-2.5 min-h-[1.25rem]">
+                        <MapPin className="w-4 h-4 shrink-0 text-gold" aria-hidden />
+                        <span>{event.location || "Location TBA"}</span>
+                      </p>
                     </div>
                   </GlassCard>
                 </motion.div>
