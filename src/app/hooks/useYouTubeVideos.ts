@@ -9,13 +9,6 @@ export interface YouTubeVideo {
   views: number;
 }
 
-const CHANNEL_ID = "UC9tV0Z2xN1HtvQu5F-ERqpg";
-const RSS_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`;
-/** Last resort only — many public proxies block production referrers or are offline */
-const CORS_PROXIES = ["https://api.allorigins.win/raw?url="];
-const FETCH_TIMEOUT_MS = 5000;
-/** Serverless cold start + YouTube latency */
-const SAME_ORIGIN_RSS_TIMEOUT_MS = 20000;
 const CACHE_KEY = "ipp_yt_videos";
 const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 
@@ -46,54 +39,6 @@ function writeCache(videos: YouTubeVideo[]) {
     const entry: CacheEntry = { videos, timestamp: Date.now() };
     localStorage.setItem(CACHE_KEY, JSON.stringify(entry));
   } catch { /* storage full */ }
-}
-
-/**
- * Mirrors `scripts/fetch-youtube-feed.mjs` — YouTube Atom uses namespaces (`yt:videoId`,
- * `media:thumbnail`, etc.). DOMParser + querySelector("videoId") misses `yt:videoId`, so
- * RSS fallbacks in the browser returned empty/wrong data while build-time JSON was fine.
- */
-function parseYouTubeAtomXml(xml: string): YouTubeVideo[] {
-  const videos: YouTubeVideo[] = [];
-  const chunks = xml.split("<entry>");
-  for (let i = 1; i < chunks.length; i++) {
-    const entry = chunks[i].split("</entry>")[0] ?? "";
-    let videoId =
-      entry.match(/<yt:videoId>([^<]*)<\/yt:videoId>/i)?.[1]?.trim() ??
-      entry.match(/<[^:]*:videoId>([^<]*)<\/[^:]*:videoId>/i)?.[1]?.trim();
-    if (!videoId) {
-      const idTag = entry.match(/<id>[^<]*:video:([^<]+)<\/id>/i);
-      videoId = idTag?.[1]?.trim() ?? "";
-    }
-    if (!videoId) continue;
-
-    const title =
-      entry.match(/<media:title>([^<]*)<\/media:title>/i)?.[1]?.trim() ??
-      entry.match(/<title>([^<]*)<\/title>/i)?.[1]?.trim() ??
-      "";
-
-    const published = entry.match(/<published>([^<]*)<\/published>/i)?.[1]?.trim() ?? "";
-
-    const thumbUrl =
-      entry.match(/<media:thumbnail[^>]*url="([^"]+)"/i)?.[1] ??
-      `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
-
-    const description =
-      entry.match(/<media:description>([\s\S]*?)<\/media:description>/i)?.[1]?.trim() ?? "";
-
-    const viewsMatch = entry.match(/views="(\d+)"/i);
-    const views = viewsMatch ? parseInt(viewsMatch[1], 10) : 0;
-
-    videos.push({
-      videoId,
-      title,
-      published,
-      thumbnail: thumbUrl,
-      description,
-      views: Number.isFinite(views) ? views : 0,
-    });
-  }
-  return videos;
 }
 
 export function timeAgo(dateStr: string): string {
@@ -128,16 +73,6 @@ export function useYouTubeVideos(maxResults = 15) {
   useEffect(() => {
     let cancelled = false;
 
-    async function fetchWithTimeout(url: string, timeoutMs = FETCH_TIMEOUT_MS) {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), timeoutMs);
-      try {
-        return await fetch(url, { signal: controller.signal });
-      } finally {
-        clearTimeout(timer);
-      }
-    }
-
     async function fetchVideos() {
       const applyVideos = (parsed: YouTubeVideo[]) => {
         writeCache(parsed);
@@ -148,22 +83,9 @@ export function useYouTubeVideos(maxResults = 15) {
         }
       };
 
-      const tryFetchRss = async (url: string, timeoutMs = FETCH_TIMEOUT_MS) => {
-        const res = await fetchWithTimeout(url, timeoutMs);
-        if (!res.ok) return false;
-        const xml = await res.text();
-        if (!xml.includes("<entry>")) return false;
-        const parsed = parseYouTubeAtomXml(xml);
-        if (parsed.length === 0) return false;
-        applyVideos(parsed);
-        return true;
-      };
-
-      // 1) Built-in snapshot (reliable in production — generated during npm run build)
-      if (cancelled) return;
       try {
         const jsonUrl = `${import.meta.env.BASE_URL}youtube-videos.json`;
-        const res = await fetchWithTimeout(jsonUrl);
+        const res = await fetch(jsonUrl);
         if (res.ok) {
           const data = (await res.json()) as StaticFeedFile;
           if (Array.isArray(data.videos) && data.videos.length > 0) {
@@ -175,43 +97,6 @@ export function useYouTubeVideos(maxResults = 15) {
         /* fall through */
       }
 
-      // 2) Same-origin API (Vite proxy RSS XML, or Vercel: RSS XML / JSON from Data API fallback)
-      if (cancelled) return;
-      try {
-        const feedUrl = `${import.meta.env.BASE_URL}api/youtube-feed`;
-        const res = await fetchWithTimeout(feedUrl, SAME_ORIGIN_RSS_TIMEOUT_MS);
-        if (res.ok) {
-          const ct = res.headers.get("content-type") ?? "";
-          if (ct.includes("application/json")) {
-            const data = (await res.json()) as StaticFeedFile;
-            if (Array.isArray(data.videos) && data.videos.length > 0) {
-              applyVideos(data.videos);
-              return;
-            }
-          } else {
-            const xml = await res.text();
-            if (xml.includes("<entry>")) {
-              const parsed = parseYouTubeAtomXml(xml);
-              if (parsed.length > 0) {
-                applyVideos(parsed);
-                return;
-              }
-            }
-          }
-        }
-      } catch {
-        /* fall through */
-      }
-
-      // 3) Public CORS proxies (fallback e.g. dev without prior build, or old deploys)
-      for (const proxy of CORS_PROXIES) {
-        if (cancelled) return;
-        try {
-          if (await tryFetchRss(proxy + encodeURIComponent(RSS_URL))) return;
-        } catch {
-          continue;
-        }
-      }
       if (!cancelled) {
         setError("Failed to load videos");
         setLoading(false);

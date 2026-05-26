@@ -2,6 +2,9 @@ import { useState, type FormEvent } from "react";
 import { Calendar, Trash2 } from "lucide-react";
 import { api, type EventRecord } from "../api";
 import { useEvents } from "../hooks/useEvents";
+import { GlassCard } from "../components/GlassCard";
+import { GoldButton } from "../components/GoldButton";
+import { IconWell, inputClassName, labelClassName } from "../components/IconWell";
 
 const empty = { title: "", date: "", time: "", location: "", description: "" };
 
@@ -39,8 +42,8 @@ export function EventsAdmin() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-8">
-      <section className="bg-zinc-900/60 border border-white/10 rounded-2xl p-6">
-        <h2 className="text-lg font-light uppercase tracking-wider mb-4">Add Event</h2>
+      <GlassCard className="p-6">
+        <h2 className="font-display text-lg font-light uppercase tracking-wider mb-4">Add Event</h2>
         <form onSubmit={handleCreate} className="space-y-3">
           <Field label="Title" value={draft.title} onChange={(v) => setDraft({ ...draft, title: v })} required />
           <Field label="Date" value={draft.date} onChange={(v) => setDraft({ ...draft, date: v })} placeholder="April 22, 2026" required />
@@ -48,30 +51,26 @@ export function EventsAdmin() {
           <Field label="Location" value={draft.location} onChange={(v) => setDraft({ ...draft, location: v })} />
           <Field label="Description" value={draft.description ?? ""} onChange={(v) => setDraft({ ...draft, description: v })} textarea />
 
-          {formError && <p className="text-sm text-red-400">{formError}</p>}
+          {formError && <p className="text-sm text-destructive">{formError}</p>}
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white font-medium py-2 rounded-lg transition-colors"
-          >
+          <GoldButton type="submit" variant="flat" disabled={submitting} className="w-full">
             {submitting ? "Saving…" : "Add Event"}
-          </button>
+          </GoldButton>
         </form>
-      </section>
+      </GlassCard>
 
-      <section className="bg-zinc-900/60 border border-white/10 rounded-2xl p-6">
+      <GlassCard className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-light uppercase tracking-wider">All Events</h2>
-          <button onClick={refresh} className="text-xs text-zinc-400 hover:text-amber-500 uppercase tracking-wider">
+          <h2 className="font-display text-lg font-light uppercase tracking-wider">All Events</h2>
+          <button onClick={refresh} className="text-xs text-muted-foreground hover:text-gold-bright uppercase tracking-wider font-display">
             Refresh
           </button>
         </div>
 
-        {loading && <p className="text-zinc-400 text-sm">Loading…</p>}
-        {error && <p className="text-red-400 text-sm">{error}</p>}
+        {loading && <p className="text-muted-foreground text-sm">Loading…</p>}
+        {error && <p className="text-destructive text-sm">{error}</p>}
         {!loading && events.length === 0 && (
-          <p className="text-zinc-500 text-sm">No events yet.</p>
+          <p className="text-muted-foreground text-sm">No events yet.</p>
         )}
 
         <ul className="space-y-3">
@@ -79,26 +78,24 @@ export function EventsAdmin() {
             <EventRow key={event.id} event={event} onDelete={() => handleDelete(event.id)} />
           ))}
         </ul>
-      </section>
+      </GlassCard>
     </div>
   );
 }
 
 function EventRow({ event, onDelete }: { event: EventRecord; onDelete: () => void }) {
   return (
-    <li className="flex items-start gap-3 bg-black/40 border border-white/5 rounded-xl p-3">
-      <div className="bg-amber-600/10 p-2 rounded-lg ring-1 ring-amber-600/20 shrink-0">
-        <Calendar className="w-5 h-5 text-amber-500" />
-      </div>
+    <li className="flex items-start gap-3 bg-input-background border border-border-subtle rounded-xl p-3">
+      <IconWell icon={Calendar} size="sm" />
       <div className="flex-1 min-w-0">
         <p className="font-medium truncate">{event.title}</p>
-        <p className="text-zinc-400 text-xs">{event.date}{event.time ? ` · ${event.time}` : ""}</p>
-        {event.location && <p className="text-zinc-500 text-xs">{event.location}</p>}
-        {event.description && <p className="text-zinc-400 text-xs mt-1 whitespace-pre-line">{event.description}</p>}
+        <p className="text-muted-foreground text-xs">{event.date}{event.time ? ` · ${event.time}` : ""}</p>
+        {event.location && <p className="text-muted-foreground/70 text-xs">{event.location}</p>}
+        {event.description && <p className="text-muted-foreground text-xs mt-1 whitespace-pre-line">{event.description}</p>}
       </div>
       <button
         onClick={onDelete}
-        className="text-zinc-500 hover:text-red-400 p-1 shrink-0"
+        className="text-muted-foreground hover:text-destructive p-1 shrink-0"
         aria-label="Delete"
       >
         <Trash2 className="w-4 h-4" />
@@ -122,17 +119,16 @@ function Field({
   required?: boolean;
   textarea?: boolean;
 }) {
-  const common = "mt-1 w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500/60";
   return (
     <label className="block">
-      <span className="text-xs uppercase tracking-wider text-zinc-400">{label}{required ? " *" : ""}</span>
+      <span className={labelClassName}>{label}{required ? " *" : ""}</span>
       {textarea ? (
         <textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           rows={3}
-          className={common}
+          className={inputClassName}
         />
       ) : (
         <input
@@ -140,7 +136,7 @@ function Field({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           required={required}
-          className={common}
+          className={inputClassName}
         />
       )}
     </label>

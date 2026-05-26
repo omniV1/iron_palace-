@@ -1,7 +1,11 @@
 import { motion } from "motion/react";
-import { ArrowLeft, Download, FileText, FileImage, FileVideo, FileAudio, FileArchive } from "lucide-react";
+import { Download, FileText, FileImage, FileVideo, FileAudio, FileArchive } from "lucide-react";
 import { useLibrary } from "../hooks/useLibrary";
-import imgNewLogo from "../../assets/feef32863d06775804f6af6bbe43f8df154b97b4.png?w=500&format=webp&quality=85";
+import { PageShell } from "../components/PageShell";
+import { SiteHeader } from "../components/SiteHeader";
+import { SectionHeading } from "../components/SectionHeading";
+import { GlassCard } from "../components/GlassCard";
+import { IconWell } from "../components/IconWell";
 
 function formatBytes(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes <= 0) return "";
@@ -29,37 +33,24 @@ export default function ResourcesPage() {
   const { files, loading, error } = useLibrary();
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      <header className="border-b border-white/10 bg-black/80 backdrop-blur-md sticky top-0 z-40">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-3 text-zinc-400 hover:text-amber-500 transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-xs uppercase tracking-wider">Back to site</span>
-          </a>
-          <a href="/" className="absolute left-1/2 -translate-x-1/2">
-            <img src={imgNewLogo} alt="Iron Palace Podcast" className="h-12 w-auto" />
-          </a>
-          <div className="w-24" />
-        </div>
-      </header>
+    <PageShell>
+      <SiteHeader />
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-          <h1 className="text-4xl md:text-5xl font-light tracking-wide uppercase mb-4">Resources</h1>
-          <p className="text-zinc-400 text-sm">Downloads, schedules, and other materials from the crew</p>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <SectionHeading
+            title="Resources"
+            subtitle="Downloads, schedules, and other materials from the crew"
+          />
         </motion.div>
 
-        {loading && <p className="text-zinc-400 text-sm text-center">Loading…</p>}
-        {error && <p className="text-red-400 text-sm text-center">Couldn't load resources: {error}</p>}
+        {loading && <p className="text-muted-foreground text-sm text-center">Loading…</p>}
+        {error && <p className="text-destructive text-sm text-center">Couldn't load resources: {error}</p>}
 
         {!loading && !error && files.length === 0 && (
           <div className="text-center py-16">
-            <FileText className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
-            <p className="text-zinc-500 text-sm">No resources have been posted yet. Check back soon.</p>
+            <FileText className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+            <p className="text-muted-foreground text-sm">No resources have been posted yet. Check back soon.</p>
           </div>
         )}
 
@@ -75,24 +66,24 @@ export default function ResourcesPage() {
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.05 }}
                 whileHover={{ y: -2 }}
-                className="group flex items-start gap-4 bg-zinc-900/60 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:border-amber-500/50 hover:bg-zinc-900/80 transition-all"
+                className="group"
               >
-                <div className="bg-amber-600/10 p-3 rounded-xl ring-1 ring-amber-600/20 shrink-0 group-hover:bg-amber-600/20 transition-colors">
-                  <Icon className="w-6 h-6 text-amber-500" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-lg font-medium truncate">{file.title}</p>
-                  {file.description && (
-                    <p className="text-zinc-400 text-sm mt-1 line-clamp-2">{file.description}</p>
-                  )}
-                  <p className="text-zinc-500 text-xs mt-2">{formatBytes(file.size)}</p>
-                </div>
-                <Download className="w-5 h-5 text-zinc-400 group-hover:text-amber-500 transition-colors shrink-0 mt-1" />
+                <GlassCard hover className="flex items-start gap-4 p-5">
+                  <IconWell icon={Icon} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-lg font-medium truncate font-display">{file.title}</p>
+                    {file.description && (
+                      <p className="text-muted-foreground text-sm mt-1 line-clamp-2">{file.description}</p>
+                    )}
+                    <p className="text-muted-foreground/70 text-xs mt-2">{formatBytes(file.size)}</p>
+                  </div>
+                  <Download className="w-5 h-5 text-muted-foreground group-hover:text-gold-bright transition-colors shrink-0 mt-1" />
+                </GlassCard>
               </motion.a>
             );
           })}
         </div>
       </main>
-    </div>
+    </PageShell>
   );
 }
