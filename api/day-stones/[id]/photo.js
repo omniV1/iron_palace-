@@ -1,8 +1,8 @@
-import { getDb } from "../_lib/mongo.js";
-import { requireAdmin } from "../_lib/auth.js";
-import { readRawBody } from "../_lib/body.js";
-import { uploadPhoto } from "../_lib/gridfsPhoto.js";
-import { sendError } from "../_lib/respond.js";
+import { getDb } from "../../_lib/mongo.js";
+import { requireAdmin } from "../../_lib/auth.js";
+import { readRawBody } from "../../_lib/body.js";
+import { uploadPhoto } from "../../_lib/gridfsPhoto.js";
+import { sendError } from "../../_lib/respond.js";
 import {
   COLLECTION,
   PHOTO_BUCKET,
@@ -10,28 +10,15 @@ import {
   serializeEntry,
   parseObjectId,
   deleteEntryPhoto,
-} from "../_lib/dayStones.js";
+} from "../../_lib/dayStones.js";
 
 export const config = {
   api: { bodyParser: false },
 };
 
-function getSlug(req) {
-  const raw = req.query.slug;
-  if (raw == null || raw === "") return [];
-  const parts = Array.isArray(raw) ? raw : [raw];
-  return parts.flatMap((segment) => String(segment).split("/").filter(Boolean));
-}
-
-/** Entry photo upload/remove — list/create/delete use index.js and [id].js */
 export default async function handler(req, res) {
   try {
-    const slug = getSlug(req);
-    if (slug.length !== 2 || slug[1] !== "photo") {
-      return res.status(404).json({ error: "not found" });
-    }
-
-    const entryId = parseObjectId(slug[0]);
+    const entryId = parseObjectId(req.query.id);
     const db = await getDb();
     const col = db.collection(COLLECTION);
 
@@ -90,6 +77,6 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "method not allowed" });
   } catch (err) {
     if (res.headersSent) return;
-    return sendError(res, err, "[api/day-stones/[[...slug]]]");
+    return sendError(res, err, "[api/day-stones/[id]/photo]");
   }
 }
