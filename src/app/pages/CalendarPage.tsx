@@ -180,7 +180,7 @@ export default function CalendarPage() {
                       relative flex flex-col items-start gap-0.5 aspect-square p-1.5 md:p-2 rounded-lg border transition-all text-left overflow-hidden
                       ${!day.isCurrentMonth ? "opacity-30 cursor-default" : ""}
                       ${hasEvents
-                        ? "border-gold bg-gold-muted shadow-[inset_0_0_0_1px_rgba(217,119,6,0.2)] cursor-pointer hover:border-gold-bright hover:bg-gold/20"
+                        ? "border-gold bg-gold-muted shadow-[inset_0_0_0_1px_rgba(220,38,38,0.25)] cursor-pointer hover:border-gold-bright hover:bg-gold/20"
                         : day.isToday
                           ? "border-gold bg-gold/10"
                           : "border-border-subtle cursor-default"

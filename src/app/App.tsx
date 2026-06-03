@@ -178,7 +178,7 @@ export default function App() {
                 href="https://www.facebook.com/p/The-Iron-Palace-Podcast-100095172626714/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-white hover:text-amber-500 transition-colors"
+                className="text-white hover:text-gold transition-colors"
                 aria-label="Facebook"
               >
                 <Facebook className="w-5 h-5" />
@@ -187,7 +187,7 @@ export default function App() {
                 href="https://www.instagram.com/the_iron_palace_podcast/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-white hover:text-amber-500 transition-colors"
+                className="text-white hover:text-gold transition-colors"
                 aria-label="Instagram"
               >
                 <Instagram className="w-5 h-5" />
@@ -197,7 +197,7 @@ export default function App() {
                 aria-label="Amazon Music"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-white hover:text-amber-500 transition-colors"
+                className="text-white hover:text-gold transition-colors"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="10"/>
@@ -208,7 +208,7 @@ export default function App() {
                 href="https://podcasts.apple.com/us/podcast/the-iron-palace-podcast/id1702337857"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-white hover:text-amber-500 transition-colors"
+                className="text-white hover:text-gold transition-colors"
                 aria-label="Apple Podcasts"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -219,7 +219,7 @@ export default function App() {
                 href="https://open.spotify.com/show/1j1M1DTBSO7wiyqJ4LFvns?si=fe3c30e5c5dd45b1"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-white hover:text-amber-500 transition-colors"
+                className="text-white hover:text-gold transition-colors"
                 aria-label="Spotify"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -230,7 +230,7 @@ export default function App() {
                 href="https://dayccaleb.podbean.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-white hover:text-amber-500 transition-colors"
+                className="text-white hover:text-gold transition-colors"
                 aria-label="Podcast"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -256,7 +256,7 @@ export default function App() {
               href="https://www.facebook.com/p/The-Iron-Palace-Podcast-100095172626714/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-amber-500 hover:text-amber-400 underline underline-offset-2"
+              className="text-gold hover:text-gold-bright underline underline-offset-2"
             >
               Facebook
             </a>{" "}
@@ -265,7 +265,7 @@ export default function App() {
               href="https://www.instagram.com/the_iron_palace_podcast/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-amber-500 hover:text-amber-400 underline underline-offset-2"
+              className="text-gold hover:text-gold-bright underline underline-offset-2"
             >
               Instagram
             </a>
@@ -276,7 +276,7 @@ export default function App() {
               href="https://www.facebook.com/p/The-Iron-Palace-Podcast-100095172626714/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-zinc-400 hover:text-amber-500 transition-colors p-1"
+              className="text-zinc-400 hover:text-gold transition-colors p-1"
               aria-label="Facebook"
             >
               <Facebook className="w-5 h-5" />
@@ -285,7 +285,7 @@ export default function App() {
               href="https://www.instagram.com/the_iron_palace_podcast/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-zinc-400 hover:text-amber-500 transition-colors p-1"
+              className="text-zinc-400 hover:text-gold transition-colors p-1"
               aria-label="Instagram"
             >
               <Instagram className="w-5 h-5" />
@@ -422,7 +422,7 @@ export default function App() {
                 href="https://www.youtube.com/@TheIronPalacePodcast"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-amber-400/90 hover:text-amber-300 underline underline-offset-2"
+                className="text-sm text-gold/90 hover:text-gold-bright underline underline-offset-2"
               >
                 Browse all episodes on YouTube
               </a>

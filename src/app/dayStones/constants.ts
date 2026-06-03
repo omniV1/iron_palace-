@@ -49,7 +49,7 @@ export const CATEGORY_ACCENTS: Record<
   },
   no_straps: {
     border: "border-t-gold",
-    glow: "shadow-[0_0_32px_rgba(217,119,6,0.1)]",
+    glow: "shadow-[0_0_32px_rgba(220,38,38,0.15)]",
     label: "text-gold",
     portrait: "ring-gold/30 bg-gold-muted text-gold",
   },

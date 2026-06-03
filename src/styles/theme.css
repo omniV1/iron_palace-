@@ -1,69 +1,84 @@
 @custom-variant dark (&:is(.dark *));
 
+/* Iron Palace — black foundation + red accent (brand tokens still named gold* in Tailwind) */
 :root {
   --font-size: 16px;
-  --background: #0a0a0a;
-  --foreground: #fafafa;
-  --surface: #0c0c0e;
-  --surface-elevated: rgba(24, 24, 27, 0.6);
-  --card: rgba(24, 24, 27, 0.6);
-  --card-foreground: #fafafa;
-  --popover: #18181b;
-  --popover-foreground: #fafafa;
-  --primary: #d97706;
-  --primary-foreground: #0a0a0a;
-  --secondary: #27272a;
-  --secondary-foreground: #fafafa;
-  --muted: #27272a;
-  --muted-foreground: #a1a1aa;
-  --accent: rgba(217, 119, 6, 0.12);
-  --accent-foreground: #fbbf24;
-  --gold: #d97706;
-  --gold-bright: #fbbf24;
-  --gold-muted: rgba(217, 119, 6, 0.15);
-  --destructive: #dc2626;
+
+  /* Surfaces */
+  --background: #000000;
+  --foreground: #f5f5f5;
+  --surface: #0a0a0a;
+  --surface-elevated: rgba(18, 10, 10, 0.78);
+  --card: rgba(22, 12, 12, 0.72);
+  --card-foreground: #f5f5f5;
+  --popover: #121010;
+  --popover-foreground: #f5f5f5;
+
+  /* Brand red */
+  --primary: #c41e1e;
+  --primary-foreground: #fafafa;
+  --secondary: #1a1a1a;
+  --secondary-foreground: #f5f5f5;
+  --muted: #171717;
+  --muted-foreground: #a3a3a3;
+  --accent: rgba(196, 30, 30, 0.14);
+  --accent-foreground: #fca5a5;
+
+  /* Accent scale (used as text-gold, border-gold, etc.) */
+  --gold: #dc2626;
+  --gold-bright: #ef4444;
+  --gold-muted: rgba(220, 38, 38, 0.14);
+
+  --destructive: #991b1b;
   --destructive-foreground: #ffffff;
-  --border: rgba(255, 255, 255, 0.1);
-  --border-subtle: rgba(255, 255, 255, 0.1);
-  --border-gold: rgba(217, 119, 6, 0.5);
+
+  /* Borders & inputs */
+  --border: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-gold: rgba(220, 38, 38, 0.42);
   --input: rgba(255, 255, 255, 0.1);
-  --input-background: rgba(0, 0, 0, 0.4);
+  --input-background: rgba(0, 0, 0, 0.55);
   --switch-background: #3f3f46;
+  --ring: rgba(239, 68, 68, 0.45);
+
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: rgba(217, 119, 6, 0.5);
   --radius: 0.625rem;
   --radius-card: 1rem;
 }
 
 .dark {
-  --background: #0a0a0a;
-  --foreground: #fafafa;
-  --surface: #0c0c0e;
-  --surface-elevated: rgba(24, 24, 27, 0.6);
-  --card: rgba(24, 24, 27, 0.6);
-  --card-foreground: #fafafa;
-  --popover: #18181b;
-  --popover-foreground: #fafafa;
-  --primary: #d97706;
-  --primary-foreground: #0a0a0a;
-  --secondary: #27272a;
-  --secondary-foreground: #fafafa;
-  --muted: #27272a;
-  --muted-foreground: #a1a1aa;
-  --accent: rgba(217, 119, 6, 0.12);
-  --accent-foreground: #fbbf24;
-  --gold: #d97706;
-  --gold-bright: #fbbf24;
-  --gold-muted: rgba(217, 119, 6, 0.15);
-  --destructive: #dc2626;
+  --background: #000000;
+  --foreground: #f5f5f5;
+  --surface: #0a0a0a;
+  --surface-elevated: rgba(18, 10, 10, 0.78);
+  --card: rgba(22, 12, 12, 0.72);
+  --card-foreground: #f5f5f5;
+  --popover: #121010;
+  --popover-foreground: #f5f5f5;
+
+  --primary: #dc2626;
+  --primary-foreground: #fafafa;
+  --secondary: #1a1a1a;
+  --secondary-foreground: #f5f5f5;
+  --muted: #171717;
+  --muted-foreground: #a3a3a3;
+  --accent: rgba(220, 38, 38, 0.16);
+  --accent-foreground: #fecaca;
+
+  --gold: #ef4444;
+  --gold-bright: #f87171;
+  --gold-muted: rgba(239, 68, 68, 0.16);
+
+  --destructive: #b91c1c;
   --destructive-foreground: #ffffff;
-  --border: rgba(255, 255, 255, 0.1);
-  --border-subtle: rgba(255, 255, 255, 0.1);
-  --border-gold: rgba(217, 119, 6, 0.5);
+
+  --border: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-gold: rgba(239, 68, 68, 0.48);
   --input: rgba(255, 255, 255, 0.1);
-  --input-background: rgba(0, 0, 0, 0.4);
-  --ring: rgba(217, 119, 6, 0.5);
+  --input-background: rgba(0, 0, 0, 0.55);
+  --ring: rgba(248, 113, 113, 0.5);
 }
 
 @theme inline {

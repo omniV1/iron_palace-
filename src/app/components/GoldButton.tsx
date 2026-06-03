@@ -8,7 +8,7 @@ const goldButtonVariants = cva(
     variants: {
       variant: {
         gradient:
-          "relative overflow-hidden rounded-lg bg-gradient-to-b from-gold to-primary text-primary-foreground px-6 py-3 shadow-[0_4px_20px_rgba(217,119,6,0.35)] hover:brightness-110",
+          "relative overflow-hidden rounded-lg bg-gradient-to-b from-gold to-primary text-primary-foreground px-6 py-3 shadow-[0_4px_20px_rgba(220,38,38,0.35)] hover:brightness-110",
         flat:
           "rounded-lg bg-primary hover:bg-gold-bright text-primary-foreground font-medium py-2 px-4 normal-case tracking-normal",
       },
