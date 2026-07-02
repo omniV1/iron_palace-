@@ -6,6 +6,7 @@ import { SiteHeader } from "../components/SiteHeader";
 import { SectionHeading } from "../components/SectionHeading";
 import { GlassCard } from "../components/GlassCard";
 import { IconWell } from "../components/IconWell";
+import { fadeInUpSm, revealProps, staggerContainer } from "../motion/variants";
 
 function formatBytes(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes <= 0) return "";
@@ -37,12 +38,10 @@ export default function ResourcesPage() {
       <SiteHeader />
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <SectionHeading
-            title="Resources"
-            subtitle="Downloads, schedules, and other materials from the crew"
-          />
-        </motion.div>
+        <SectionHeading
+          title="Resources"
+          subtitle="Downloads, schedules, and other materials from the crew"
+        />
 
         {loading && <p className="text-muted-foreground text-sm text-center">Loading…</p>}
         {error && <p className="text-destructive text-sm text-center">Couldn't load resources: {error}</p>}
@@ -54,18 +53,18 @@ export default function ResourcesPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {files.map((file, idx) => {
+        <motion.div
+          variants={staggerContainer(0.06)}
+          {...revealProps}
+          className="grid grid-cols-1 md:grid-cols-2 gap-4"
+        >
+          {files.map((file) => {
             const Icon = iconFor(file.contentType);
             return (
               <motion.a
                 key={file.id}
                 href={`${file.url}?download`}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.05 }}
-                whileHover={{ y: -2 }}
+                variants={fadeInUpSm}
                 className="group"
               >
                 <GlassCard hover className="flex items-start gap-4 p-5">
@@ -77,12 +76,12 @@ export default function ResourcesPage() {
                     )}
                     <p className="text-muted-foreground/70 text-xs mt-2">{formatBytes(file.size)}</p>
                   </div>
-                  <Download className="w-5 h-5 text-muted-foreground group-hover:text-gold-bright transition-colors shrink-0 mt-1" />
+                  <Download className="w-5 h-5 text-muted-foreground group-hover:text-crimson-bright transition-colors shrink-0 mt-1" />
                 </GlassCard>
               </motion.a>
             );
           })}
-        </div>
+        </motion.div>
       </main>
     </PageShell>
   );

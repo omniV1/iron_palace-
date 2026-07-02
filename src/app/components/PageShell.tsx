@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
+import { motion } from "motion/react";
 import { cn } from "./ui/utils";
+import { fadeInUpSm } from "../motion/variants";
 
 type PageShellProps = {
   children: ReactNode;
@@ -8,8 +10,13 @@ type PageShellProps = {
 
 export function PageShell({ children, className }: PageShellProps) {
   return (
-    <div className={cn("min-h-screen bg-background text-foreground", className)}>
+    <motion.div
+      initial="hidden"
+      animate="show"
+      variants={fadeInUpSm}
+      className={cn("min-h-screen bg-background text-foreground", className)}
+    >
       {children}
-    </div>
+    </motion.div>
   );
 }

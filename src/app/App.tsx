@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { ArrowRight, Calendar, ChevronLeft, ChevronRight, Clock, Download, Facebook, FileText, Instagram, MapPin, Play, X } from "lucide-react";
 import { Section } from "./components/Section";
 import { SectionHeading } from "./components/SectionHeading";
 import { GlassCard } from "./components/GlassCard";
-import { GoldButton } from "./components/GoldButton";
+import { CrimsonButton } from "./components/CrimsonButton";
 import { IconWell } from "./components/IconWell";
 import { useYouTubeVideos, timeAgo } from "./hooks/useYouTubeVideos";
 import { useEvents } from "./hooks/useEvents";
@@ -14,6 +14,7 @@ import { useDayStones } from "./hooks/useDayStones";
 import { DayStonesIntro } from "./components/DayStonesIntro";
 import { DayStonesHomePreview } from "./components/DayStonesHomePreview";
 import { previewEntries, splitByCategory } from "./dayStones/utils";
+import { EASE, fadeInUp, fadeInUpSm, revealProps, scaleIn, staggerContainer, tapScaleSm } from "./motion/variants";
 
 import imgMerchDragon from "../imports/Group2/9fe969f07b1189f5a7e8d627018c5bf063261cab.png?w=800&format=webp&quality=80";
 import imgMerchWhite from "../imports/Group2/0e04069fb44385863cd0bed92320736368ccc2bc.png?w=800&format=webp&quality=80";
@@ -91,6 +92,7 @@ export default function App() {
   const [currentPhoto, setCurrentPhoto] = useState(0);
   const [hoveredCrew, setHoveredCrew] = useState<number | null>(null);
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
+  const prefersReducedMotion = useReducedMotion();
   const { videos, loading: videosLoading, error: videosError } = useYouTubeVideos(15);
   const { events: liveEvents } = useEvents();
   const { photos: livePhotos } = useGallery();
@@ -161,7 +163,8 @@ export default function App() {
       <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        className="fixed top-0 left-0 right-0 z-50 bg-black/60 backdrop-blur-md border-b border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
+        transition={{ duration: 0.6, ease: EASE }}
+        className="fixed top-0 left-0 right-0 z-50 bg-black/70 backdrop-blur-lg border-b border-white/10"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
@@ -169,74 +172,81 @@ export default function App() {
               href="https://www.instagram.com/the_iron_palace_podcast/"
               target="_blank"
               rel="noopener noreferrer"
+              className="transition-transform duration-200 hover:scale-[1.03]"
             >
               <img src={imgNewLogo} alt="Iron Palace Podcast" className="h-12 w-auto" decoding="async" fetchPriority="high" />
             </a>
 
             <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3 md:gap-4">
-              <a
+              <motion.a
+                {...tapScaleSm}
                 href="https://www.facebook.com/p/The-Iron-Palace-Podcast-100095172626714/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-white hover:text-gold transition-colors"
+                className="text-zinc-300 hover:text-crimson-bright transition-colors"
                 aria-label="Facebook"
               >
                 <Facebook className="w-5 h-5" />
-              </a>
-              <a
+              </motion.a>
+              <motion.a
+                {...tapScaleSm}
                 href="https://www.instagram.com/the_iron_palace_podcast/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-white hover:text-gold transition-colors"
+                className="text-zinc-300 hover:text-crimson-bright transition-colors"
                 aria-label="Instagram"
               >
                 <Instagram className="w-5 h-5" />
-              </a>
-              <a
+              </motion.a>
+              <motion.a
+                {...tapScaleSm}
                 href="https://music.amazon.com/podcasts/948d7a31-8e4a-4cca-a284-b81bbe979f99/the-iron-palace-podcast?ref=dm_sh_W8e0obyIKGENhI3aM53Mf23Vf"
                 aria-label="Amazon Music"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-white hover:text-gold transition-colors"
+                className="text-zinc-300 hover:text-crimson-bright transition-colors"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="10"/>
                   <text x="12" y="12" fontSize="14" fill="currentColor" textAnchor="middle" dominantBaseline="central" fontWeight="600" fontFamily="Arial, sans-serif" stroke="none">a</text>
                 </svg>
-              </a>
-              <a
+              </motion.a>
+              <motion.a
+                {...tapScaleSm}
                 href="https://podcasts.apple.com/us/podcast/the-iron-palace-podcast/id1702337857"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-white hover:text-gold transition-colors"
+                className="text-zinc-300 hover:text-crimson-bright transition-colors"
                 aria-label="Apple Podcasts"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 2.182c5.423 0 9.818 4.395 9.818 9.818 0 5.423-4.395 9.818-9.818 9.818-5.423 0-9.818-4.395-9.818-9.818 0-5.423 4.395-9.818 9.818-9.818zm0 3.273c-2.086 0-3.782 1.696-3.782 3.782 0 1.455.828 2.718 2.036 3.354v5.118c0 .604.491 1.091 1.091 1.091h1.309c.604 0 1.091-.487 1.091-1.091v-5.118c1.209-.636 2.036-1.9 2.036-3.354 0-2.086-1.696-3.782-3.782-3.782zm0 1.636c1.182 0 2.145.964 2.145 2.145 0 1.182-.963 2.145-2.145 2.145-1.182 0-2.145-.963-2.145-2.145 0-1.181.963-2.145 2.145-2.145z"/>
                 </svg>
-              </a>
-              <a
+              </motion.a>
+              <motion.a
+                {...tapScaleSm}
                 href="https://open.spotify.com/show/1j1M1DTBSO7wiyqJ4LFvns?si=fe3c30e5c5dd45b1"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-white hover:text-gold transition-colors"
+                className="text-zinc-300 hover:text-crimson-bright transition-colors"
                 aria-label="Spotify"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm5.5 17.3c-.2.3-.6.4-.9.2-2.5-1.5-5.6-1.9-9.3-1-0.4.1-.8-.2-.8-.6-.1-.4.2-.8.6-.8 4-.9 7.4-.5 10.2 1.2.3.2.4.7.2 1zm1.3-2.9c-.3.4-.8.5-1.2.2-2.8-1.7-7.1-2.2-10.4-1.2-.5.1-1-.2-1.1-.6-.1-.5.2-1 .6-1.1 3.8-1.1 8.6-.6 11.8 1.4.4.2.5.9.3 1.3zm.1-3c-3.4-2-9-2.2-12.2-1.2-.5.2-1.1-.1-1.3-.6-.2-.5.1-1.1.6-1.3 3.7-1.1 10-0.9 13.9 1.4.5.3.6.9.3 1.4-.3.4-.9.6-1.3.3z"/>
                 </svg>
-              </a>
-              <a
+              </motion.a>
+              <motion.a
+                {...tapScaleSm}
                 href="https://dayccaleb.podbean.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-white hover:text-gold transition-colors"
+                className="text-zinc-300 hover:text-crimson-bright transition-colors"
                 aria-label="Podcast"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm0 21.6c-5.3 0-9.6-4.3-9.6-9.6S6.7 2.4 12 2.4s9.6 4.3 9.6 9.6-4.3 9.6-9.6 9.6zm0-16.8c-4 0-7.2 3.2-7.2 7.2s3.2 7.2 7.2 7.2 7.2-3.2 7.2-7.2-3.2-7.2-7.2-7.2zm0 12c-2.7 0-4.8-2.2-4.8-4.8S9.3 7.2 12 7.2s4.8 2.2 4.8 4.8-2.1 4.8-4.8 4.8z"/>
                 </svg>
-              </a>
+              </motion.a>
             </div>
 
           </div>
@@ -245,7 +255,7 @@ export default function App() {
 
       {/* Sticky contact strip — follows viewport while scrolling */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/20 bg-black/60 backdrop-blur-md shadow-[0_-8px_32px_rgba(0,0,0,0.3)] pb-[max(0.5rem,env(safe-area-inset-bottom))]"
+        className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-black/70 backdrop-blur-lg pb-[max(0.5rem,env(safe-area-inset-bottom))]"
         role="contentinfo"
         aria-label="Contact"
       >
@@ -256,7 +266,7 @@ export default function App() {
               href="https://www.facebook.com/p/The-Iron-Palace-Podcast-100095172626714/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gold hover:text-gold-bright underline underline-offset-2"
+              className="text-crimson-bright hover:text-crimson underline underline-offset-2"
             >
               Facebook
             </a>{" "}
@@ -265,7 +275,7 @@ export default function App() {
               href="https://www.instagram.com/the_iron_palace_podcast/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gold hover:text-gold-bright underline underline-offset-2"
+              className="text-crimson-bright hover:text-crimson underline underline-offset-2"
             >
               Instagram
             </a>
@@ -276,7 +286,7 @@ export default function App() {
               href="https://www.facebook.com/p/The-Iron-Palace-Podcast-100095172626714/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-zinc-400 hover:text-gold transition-colors p-1"
+              className="text-zinc-400 hover:text-crimson-bright transition-colors p-1"
               aria-label="Facebook"
             >
               <Facebook className="w-5 h-5" />
@@ -285,7 +295,7 @@ export default function App() {
               href="https://www.instagram.com/the_iron_palace_podcast/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-zinc-400 hover:text-gold transition-colors p-1"
+              className="text-zinc-400 hover:text-crimson-bright transition-colors p-1"
               aria-label="Instagram"
             >
               <Instagram className="w-5 h-5" />
@@ -296,31 +306,40 @@ export default function App() {
 
       {/* Hero Section */}
       <section id="home" className="relative h-screen flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0">
+        <motion.div
+          className="absolute inset-0"
+          initial={{ scale: 1.08 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 1.4, ease: EASE }}
+        >
           <img
             src={imgLifting}
             alt="The Iron Palace"
-            className="w-full h-full object-cover scale-105"
+            className="w-full h-full object-cover"
             decoding="async"
             fetchPriority="high"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black"></div>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.3)_100%)]"></div>
-        </div>
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.9, ease: EASE }}
           className="relative z-10 text-center px-4"
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 0.9, ease: EASE }}
             className="w-full max-w-xs mx-auto mb-8 relative"
           >
-            <div className="absolute inset-0 bg-white/20 blur-3xl rounded-full scale-110"></div>
+            <motion.div
+              className="absolute inset-0 bg-crimson/25 blur-3xl rounded-full scale-110"
+              animate={prefersReducedMotion ? undefined : { opacity: [0.5, 0.9, 0.5] }}
+              transition={prefersReducedMotion ? undefined : { duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            />
             <img
               src={imgNewLogo}
               alt="The Iron Palace Podcast"
@@ -334,28 +353,36 @@ export default function App() {
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
+            transition={{ delay: 0.5, duration: 0.8, ease: EASE }}
             className="text-lg md:text-xl tracking-[0.3em] uppercase font-light"
           >
             The World's Most Anabolic Podcast
           </motion.p>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, y: [0, 6, 0] }}
+            transition={{ opacity: { delay: 0.9, duration: 0.6 }, y: prefersReducedMotion ? undefined : { duration: 2, repeat: Infinity, ease: "easeInOut", delay: 1.2 } }}
+            className="mt-14 flex justify-center"
+            aria-hidden
+          >
+            <div className="h-9 w-5 rounded-full border border-white/25 flex items-start justify-center p-1.5">
+              <div className="h-1.5 w-1.5 rounded-full bg-crimson-bright" />
+            </div>
+          </motion.div>
         </motion.div>
       </section>
 
       {/* Latest Episode Section */}
       <Section id="latest" variant="elevated">
         <div className="max-w-7xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <SectionHeading title="Latest Episode" subtitle="Watch our most recent upload" />
-          </motion.div>
+          <SectionHeading eyebrow="Fresh Upload" title="Latest Episode" subtitle="Watch our most recent upload" />
 
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
+            variants={scaleIn}
+            {...revealProps}
             className="max-w-5xl mx-auto"
           >
-            <GlassCard accent className="p-4 sm:p-5 shadow-[0_24px_70px_rgba(0,0,0,0.65)]">
+            <GlassCard accent className="p-4 sm:p-5 shadow-[var(--shadow-pop)]">
               <div className="relative rounded-xl border border-border-subtle bg-input-background p-1.5">
                 <div className="relative aspect-video overflow-hidden rounded-lg shadow-[0_14px_38px_rgba(0,0,0,0.55)]">
                   <iframe
@@ -378,7 +405,7 @@ export default function App() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <GoldButton>Subscribe on YouTube</GoldButton>
+              <CrimsonButton>Subscribe on YouTube</CrimsonButton>
             </a>
           </div>
         </div>
@@ -387,14 +414,7 @@ export default function App() {
       {/* Recent Episodes Grid — auto-updates from build-time YouTube feed */}
       <Section>
         <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-12 flex w-full flex-col items-center text-center"
-          >
-            <SectionHeading title="Recent Episodes" subtitle="Catch up on what you missed" />
-          </motion.div>
+          <SectionHeading title="Recent Episodes" subtitle="Catch up on what you missed" />
 
           {videosLoading ? (
             <div className="overflow-x-auto pb-2 [scrollbar-width:thin]">
@@ -422,22 +442,27 @@ export default function App() {
                 href="https://www.youtube.com/@TheIronPalacePodcast"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-gold/90 hover:text-gold-bright underline underline-offset-2"
+                className="text-sm text-crimson/90 hover:text-crimson-bright underline underline-offset-2"
               >
                 Browse all episodes on YouTube
               </a>
             </div>
           ) : (
             <div className="overflow-x-auto pb-2 [scrollbar-width:thin]">
-              <div className="flex w-max max-w-full mx-auto gap-5 snap-x snap-mandatory pb-1">
-                {videos.slice(1, 4).map((video, index) => (
+              <motion.div
+                variants={staggerContainer(0.06)}
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true, margin: "-60px" }}
+                className="flex w-max max-w-full mx-auto gap-5 snap-x snap-mandatory pb-1"
+              >
+                {videos.slice(1, 4).map((video) => (
                   <motion.div
                     key={video.videoId}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    whileHover={{ y: -2 }}
-                    className="group w-[min(85vw,300px)] flex-shrink-0 snap-start cursor-pointer active:scale-[0.99] transition-transform text-left"
+                    variants={fadeInUpSm}
+                    whileHover={{ y: -6 }}
+                    transition={{ type: "spring", stiffness: 260, damping: 24 }}
+                    className="group w-[min(85vw,300px)] flex-shrink-0 snap-start cursor-pointer text-left"
                     onClick={() => setActiveVideoId(video.videoId)}
                   >
                     <div className="relative aspect-video rounded-xl overflow-hidden ring-1 ring-white/10 shadow-lg shadow-black/40 mb-3">
@@ -448,12 +473,12 @@ export default function App() {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                       <div className="absolute inset-0 bg-black/20 sm:bg-black/0 group-hover:bg-black/40 transition-colors duration-300 flex items-center justify-center">
-                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gold/90 flex items-center justify-center opacity-80 sm:opacity-0 group-hover:opacity-100 scale-90 sm:scale-75 group-hover:scale-100 transition-all duration-300 shadow-lg shadow-gold/30">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-crimson/90 flex items-center justify-center opacity-80 sm:opacity-0 group-hover:opacity-100 scale-90 sm:scale-75 group-hover:scale-100 transition-all duration-300 shadow-lg shadow-crimson/30">
                           <Play className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground ml-0.5" fill="currentColor" />
                         </div>
                       </div>
                     </div>
-                    <h3 className="text-sm font-medium line-clamp-2 group-hover:text-gold-bright transition-colors duration-200">
+                    <h3 className="text-sm font-medium line-clamp-2 group-hover:text-crimson-bright transition-colors duration-200">
                       {video.title}
                     </h3>
                     <p className="text-xs text-zinc-500 mt-1">
@@ -461,7 +486,7 @@ export default function App() {
                     </p>
                   </motion.div>
                 ))}
-              </div>
+              </motion.div>
             </div>
           )}
 
@@ -511,62 +536,53 @@ export default function App() {
       {/* Upcoming Events — next three on the calendar */}
       <Section>
         <div className="max-w-7xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <SectionHeading title="Upcoming Events" subtitle="What's coming up" />
-          </motion.div>
+          <SectionHeading title="Upcoming Events" subtitle="What's coming up" />
 
           {upcomingEvents.length === 0 ? (
             <p className="text-center text-muted-foreground text-sm">
               No upcoming events scheduled.{" "}
-              <a href="/calendar" className="text-gold hover:text-gold-bright underline underline-offset-2">
+              <a href="/calendar" className="text-crimson hover:text-crimson-bright underline underline-offset-2">
                 See the full calendar
               </a>
               .
             </p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto items-stretch">
-              {upcomingEvents.map((event, index) => (
-                <motion.div
-                  key={event.id}
-                  className="h-full"
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ y: -4, scale: 1.02 }}
-                >
-                  <GlassCard
-                    hover
-                    className="flex h-full min-h-[220px] flex-col p-6 hover:shadow-xl hover:shadow-gold/10 transition-all duration-300"
-                  >
+            <motion.div
+              variants={staggerContainer(0.1)}
+              {...revealProps}
+              className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto items-stretch"
+            >
+              {upcomingEvents.map((event) => (
+                <motion.div key={event.id} variants={fadeInUp} className="h-full">
+                  <GlassCard hover className="flex h-full min-h-[220px] flex-col p-6">
                     <h3 className="font-display text-xl font-medium mb-auto">{event.title}</h3>
                     <div className="mt-6 space-y-2.5 text-sm text-muted-foreground">
                       <p className="flex items-center gap-2.5 min-h-[1.25rem]">
-                        <Calendar className="w-4 h-4 shrink-0 text-gold" aria-hidden />
+                        <Calendar className="w-4 h-4 shrink-0 text-crimson-bright" aria-hidden />
                         <span>{event.date}</span>
                       </p>
                       <p className="flex items-center gap-2.5 min-h-[1.25rem]">
-                        <Clock className="w-4 h-4 shrink-0 text-gold" aria-hidden />
+                        <Clock className="w-4 h-4 shrink-0 text-crimson-bright" aria-hidden />
                         <span>{event.time || "Time TBA"}</span>
                       </p>
                       <p className="flex items-center gap-2.5 min-h-[1.25rem]">
-                        <MapPin className="w-4 h-4 shrink-0 text-gold" aria-hidden />
+                        <MapPin className="w-4 h-4 shrink-0 text-crimson-bright" aria-hidden />
                         <span>{event.location || "Location TBA"}</span>
                       </p>
                     </div>
                   </GlassCard>
                 </motion.div>
               ))}
-            </div>
+            </motion.div>
           )}
 
           <div className="text-center mt-10">
             <a
               href="/calendar"
-              className="inline-flex items-center gap-2 text-gold hover:text-gold-bright text-sm uppercase tracking-wider transition-colors font-display"
+              className="inline-flex items-center gap-2 text-crimson hover:text-crimson-bright text-sm uppercase tracking-wider transition-colors font-display group"
             >
               View full calendar
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
             </a>
           </div>
         </div>
@@ -589,10 +605,10 @@ export default function App() {
           <div className="text-center mt-10">
             <a
               href="/day-stones"
-              className="inline-flex items-center gap-2 text-gold hover:text-gold-bright text-sm uppercase tracking-wider transition-colors font-display"
+              className="inline-flex items-center gap-2 text-crimson hover:text-crimson-bright text-sm uppercase tracking-wider transition-colors font-display group"
             >
               View full record books
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
             </a>
           </div>
         </div>
@@ -601,34 +617,35 @@ export default function App() {
       {/* Merch Section */}
       <Section id="merch" variant="elevated">
         <div className="max-w-7xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <SectionHeading title="Featured Merchandise" className="mb-16" />
-          </motion.div>
+          <SectionHeading title="Featured Merchandise" className="mb-16" />
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-            {merchItems.map((item, index) => (
+          <motion.div
+            variants={staggerContainer(0.1)}
+            {...revealProps}
+            className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12"
+          >
+            {merchItems.map((item) => (
               <motion.div
                 key={item.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
+                variants={fadeInUp}
+                whileHover={{ y: -6 }}
+                transition={{ type: "spring", stiffness: 260, damping: 24 }}
                 className="group cursor-pointer"
               >
-                <div className="relative overflow-hidden rounded-2xl border border-white/20 aspect-square mb-4 shadow-lg shadow-black/40 transition-all duration-300 ring-1 ring-white/10">
+                <div className="relative overflow-hidden rounded-2xl border border-white/15 aspect-square mb-4 shadow-lg shadow-black/40 transition-colors duration-300 ring-1 ring-white/10 group-hover:border-crimson/40">
                   <img
                     src={item.image}
                     alt={item.name}
                     loading="lazy"
                     decoding="async"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500 ease-out"
                   />
                 </div>
-                <h3 className="font-display text-lg font-light uppercase tracking-wide mb-2 group-hover:text-gold-bright transition-colors">{item.name}</h3>
+                <h3 className="font-display text-lg font-light uppercase tracking-wide mb-2 group-hover:text-crimson-bright transition-colors">{item.name}</h3>
                 <p className="text-muted-foreground text-base">{item.price}</p>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
 
           <div className="text-center">
             <a
@@ -637,7 +654,7 @@ export default function App() {
               rel="noopener noreferrer"
               className="inline-block relative overflow-hidden group rounded-lg"
             >
-              <GoldButton size="lg">Shop All</GoldButton>
+              <CrimsonButton size="lg">Shop All</CrimsonButton>
             </a>
 
             <div className="mt-5">
@@ -700,24 +717,24 @@ export default function App() {
       {/* Meet the Crew Section */}
       <Section id="crew">
         <div className="max-w-7xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <SectionHeading title="Meet The Crew" subtitle="Hover over each member to learn more" className="mb-16" />
-          </motion.div>
+          <SectionHeading title="Meet The Crew" subtitle="Hover over each member to learn more" className="mb-16" />
 
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-6 md:gap-8 mb-12">
+          <motion.div
+            variants={staggerContainer(0.08)}
+            {...revealProps}
+            className="grid grid-cols-2 md:grid-cols-5 gap-6 md:gap-8 mb-12"
+          >
             {crewMembers.map((member, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
+                variants={scaleIn}
                 whileHover={{ scale: 1.05, rotateZ: 2 }}
+                transition={{ type: "spring", stiffness: 260, damping: 22 }}
                 className="relative group cursor-pointer"
                 onMouseEnter={() => setHoveredCrew(index)}
                 onMouseLeave={() => setHoveredCrew(null)}
               >
-                <div className="relative w-full aspect-square rounded-full overflow-hidden border border-border-subtle group-hover:border-gold transition-all duration-300 mx-auto shadow-xl shadow-black/40 group-hover:shadow-2xl group-hover:shadow-gold/40">
+                <div className="relative w-full aspect-square rounded-full overflow-hidden border border-border-subtle group-hover:border-crimson transition-all duration-300 mx-auto shadow-xl shadow-black/40 group-hover:shadow-2xl group-hover:shadow-crimson/40">
                   <img
                     src={member.image}
                     alt={member.name}
@@ -728,7 +745,7 @@ export default function App() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/0 to-black/40 group-hover:from-black/40 group-hover:via-black/50 group-hover:to-black/70 transition-all duration-300"></div>
                 </div>
-                <p className="mt-3 text-sm md:text-base font-display font-medium text-center group-hover:text-gold-bright transition-colors">
+                <p className="mt-3 text-sm md:text-base font-display font-medium text-center group-hover:text-crimson-bright transition-colors">
                   {member.name}
                 </p>
                 <p className="text-xs uppercase tracking-wider text-muted-foreground text-center mt-0.5 font-display">
@@ -736,7 +753,7 @@ export default function App() {
                 </p>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
 
           {/* Bio Display Area */}
           <motion.div
@@ -744,7 +761,7 @@ export default function App() {
               height: hoveredCrew !== null ? "auto" : 0,
               opacity: hoveredCrew !== null ? 1 : 0,
             }}
-            transition={{ duration: 0.4, ease: "easeInOut" }}
+            transition={{ duration: 0.4, ease: EASE }}
             className="overflow-hidden flex items-center justify-center"
           >
             <AnimatePresence mode="wait">
@@ -754,10 +771,10 @@ export default function App() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="bg-card backdrop-blur-md border border-border-gold rounded-2xl p-6 md:p-8 text-center max-w-2xl mx-auto w-full my-6 shadow-2xl shadow-gold/20 ring-1 ring-border-subtle"
+                  transition={{ duration: 0.3, ease: EASE }}
+                  className="bg-card border border-border-crimson rounded-[var(--radius-card)] p-6 md:p-8 text-center max-w-2xl mx-auto w-full my-6 shadow-[var(--shadow-card-hover)]"
                 >
-                  <h3 className="font-display text-xl md:text-2xl uppercase tracking-wide mb-2 text-gold-bright">
+                  <h3 className="font-display text-xl md:text-2xl uppercase tracking-wide mb-2 text-crimson-bright">
                     {crewMembers[hoveredCrew].name}
                   </h3>
                   <p className="text-sm md:text-base uppercase tracking-wider text-muted-foreground mb-3 font-display">
@@ -774,9 +791,7 @@ export default function App() {
       {/* Photo Gallery Section */}
       <Section variant="elevated">
         <div className="max-w-7xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <SectionHeading title="From Our Community" subtitle="Latest photos from our events and workouts" />
-          </motion.div>
+          <SectionHeading title="From Our Community" subtitle="Latest photos from our events and workouts" />
 
           <div className="relative max-w-4xl mx-auto">
             <div className="relative aspect-[4/3] overflow-hidden rounded-2xl ring-1 ring-white/20 shadow-2xl shadow-black/60">
@@ -802,26 +817,31 @@ export default function App() {
               )}
             </div>
 
-            <button
+            <motion.button
+              {...tapScaleSm}
               onClick={prevPhoto}
-              className="absolute left-4 top-1/2 -translate-y-1/2 bg-background/70 backdrop-blur-md hover:bg-background/90 p-3 rounded-full transition-all ring-1 ring-border-subtle shadow-lg shadow-black/50 hover:shadow-xl hover:shadow-gold/20 hover:scale-110 hover:ring-border-gold"
+              className="absolute left-4 top-1/2 -translate-y-1/2 bg-background/70 backdrop-blur-md hover:bg-background/90 p-3 rounded-full transition-colors ring-1 ring-border-subtle shadow-lg shadow-black/50 hover:ring-border-crimson"
+              aria-label="Previous photo"
             >
               <ChevronLeft className="w-8 h-8" />
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              {...tapScaleSm}
               onClick={nextPhoto}
-              className="absolute right-4 top-1/2 -translate-y-1/2 bg-background/70 backdrop-blur-md hover:bg-background/90 p-3 rounded-full transition-all ring-1 ring-border-subtle shadow-lg shadow-black/50 hover:shadow-xl hover:shadow-gold/20 hover:scale-110 hover:ring-border-gold"
+              className="absolute right-4 top-1/2 -translate-y-1/2 bg-background/70 backdrop-blur-md hover:bg-background/90 p-3 rounded-full transition-colors ring-1 ring-border-subtle shadow-lg shadow-black/50 hover:ring-border-crimson"
+              aria-label="Next photo"
             >
               <ChevronRight className="w-8 h-8" />
-            </button>
+            </motion.button>
 
             <div className="flex justify-center gap-2 mt-6">
               {galleryItems.map((_, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentPhoto(index)}
-                  className={`h-1 rounded-full transition-all ${
-                    index === currentPhoto ? "bg-gold w-8" : "bg-white/30 hover:bg-white/50 w-8"
+                  aria-label={`Go to photo ${index + 1}`}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    index === currentPhoto ? "bg-crimson-bright w-8" : "bg-white/30 hover:bg-white/50 w-4"
                   }`}
                 />
               ))}
@@ -834,7 +854,7 @@ export default function App() {
                   href="https://www.facebook.com/profile.php?id=100095172626714&sk=photos"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-gold hover:text-gold-bright underline"
+                  className="text-crimson hover:text-crimson-bright underline"
                 >
                   Facebook Photos
                 </a>
@@ -851,22 +871,20 @@ export default function App() {
       {libraryFiles.length > 0 && (
         <Section>
           <div className="max-w-7xl mx-auto">
-            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-              <SectionHeading title="Resources" subtitle="Downloads, schedules, and other goodies" />
-            </motion.div>
+            <SectionHeading title="Resources" subtitle="Downloads, schedules, and other goodies" />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
-              {libraryFiles.slice(0, 4).map((file, index) => (
+            <motion.div
+              variants={staggerContainer(0.06)}
+              {...revealProps}
+              className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto"
+            >
+              {libraryFiles.slice(0, 4).map((file) => (
                 <motion.a
                   key={file.id}
                   href={`${file.url}?download`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.05 }}
-                  whileHover={{ y: -2 }}
+                  variants={fadeInUpSm}
                   className="group"
                 >
                   <GlassCard hover className="flex items-center gap-4 p-4">
@@ -878,19 +896,19 @@ export default function App() {
                       )}
                       <p className="text-muted-foreground/70 text-xs mt-1">{formatBytes(file.size)}</p>
                     </div>
-                    <Download className="w-5 h-5 text-muted-foreground group-hover:text-gold-bright shrink-0 transition-colors" />
+                    <Download className="w-5 h-5 text-muted-foreground group-hover:text-crimson-bright shrink-0 transition-colors" />
                   </GlassCard>
                 </motion.a>
               ))}
-            </div>
+            </motion.div>
 
             <div className="text-center mt-10">
               <a
                 href="/resources"
-                className="inline-flex items-center gap-2 text-gold hover:text-gold-bright text-sm uppercase tracking-wider transition-colors font-display"
+                className="inline-flex items-center gap-2 text-crimson hover:text-crimson-bright text-sm uppercase tracking-wider transition-colors font-display group"
               >
                 View all resources
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
               </a>
             </div>
           </div>
@@ -898,17 +916,17 @@ export default function App() {
       )}
 
       {/* Footer */}
-      <footer className="relative z-10 bg-background py-8 px-4 border-t border-border-subtle">
+      <footer className="relative z-10 bg-background py-10 px-4 border-t border-border-subtle">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col items-center gap-6">
-            <img src={imgNewLogo} alt="Iron Palace Podcast" className="h-16 w-auto" loading="lazy" decoding="async" />
+            <img src={imgNewLogo} alt="Iron Palace Podcast" className="h-16 w-auto opacity-90" loading="lazy" decoding="async" />
 
             <div className="flex items-center gap-4">
               <a
                 href="https://www.facebook.com/p/The-Iron-Palace-Podcast-100095172626714/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-gold-bright transition-colors"
+                className="text-muted-foreground hover:text-crimson-bright transition-colors"
                 aria-label="Facebook"
               >
                 <Facebook className="w-5 h-5" />
@@ -917,7 +935,7 @@ export default function App() {
                 href="https://www.instagram.com/the_iron_palace_podcast/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-gold-bright transition-colors"
+                className="text-muted-foreground hover:text-crimson-bright transition-colors"
                 aria-label="Instagram"
               >
                 <Instagram className="w-5 h-5" />
@@ -927,7 +945,7 @@ export default function App() {
                 aria-label="Amazon Music"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-gold-bright transition-colors"
+                className="text-muted-foreground hover:text-crimson-bright transition-colors"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="10"/>
@@ -938,7 +956,7 @@ export default function App() {
                 href="https://podcasts.apple.com/us/podcast/the-iron-palace-podcast/id1702337857"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-gold-bright transition-colors"
+                className="text-muted-foreground hover:text-crimson-bright transition-colors"
                 aria-label="Apple Podcasts"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -949,7 +967,7 @@ export default function App() {
                 href="https://open.spotify.com/show/1j1M1DTBSO7wiyqJ4LFvns?si=fe3c30e5c5dd45b1"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-gold-bright transition-colors"
+                className="text-muted-foreground hover:text-crimson-bright transition-colors"
                 aria-label="Spotify"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -960,7 +978,7 @@ export default function App() {
                 href="https://dayccaleb.podbean.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-gold-bright transition-colors"
+                className="text-muted-foreground hover:text-crimson-bright transition-colors"
                 aria-label="Podcast"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">

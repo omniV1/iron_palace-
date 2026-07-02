@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import type { DayStoneEntry } from "../api";
 import {
   CATEGORY_ACCENTS,
@@ -7,6 +8,7 @@ import {
 } from "../dayStones/constants";
 import { GlassCard } from "./GlassCard";
 import { cn } from "./ui/utils";
+import { fadeInUp, revealProps, staggerContainer } from "../motion/variants";
 
 type BookProps = {
   category: DayStoneCategory;
@@ -17,7 +19,7 @@ type BookProps = {
 function TeaserBook({ category, entries, totalCount }: BookProps) {
   const accent = CATEGORY_ACCENTS[category];
   const title = CATEGORY_LABELS[category];
-  const accentDot = category === "no_straps" ? "bg-gold" : "bg-zinc-400";
+  const accentDot = category === "no_straps" ? "bg-crimson" : "bg-zinc-400";
 
   return (
     <GlassCard
@@ -92,9 +94,17 @@ export function DayStonesHomePreview({
   withoutStrapsTotal,
 }: Props) {
   return (
-    <div className="mx-auto grid max-w-4xl grid-cols-1 items-stretch gap-6 md:grid-cols-2">
-      <TeaserBook category="straps" entries={withStraps} totalCount={withStrapsTotal} />
-      <TeaserBook category="no_straps" entries={withoutStraps} totalCount={withoutStrapsTotal} />
-    </div>
+    <motion.div
+      variants={staggerContainer(0.1)}
+      {...revealProps}
+      className="mx-auto grid max-w-4xl grid-cols-1 items-stretch gap-6 md:grid-cols-2"
+    >
+      <motion.div variants={fadeInUp}>
+        <TeaserBook category="straps" entries={withStraps} totalCount={withStrapsTotal} />
+      </motion.div>
+      <motion.div variants={fadeInUp}>
+        <TeaserBook category="no_straps" entries={withoutStraps} totalCount={withoutStrapsTotal} />
+      </motion.div>
+    </motion.div>
   );
 }

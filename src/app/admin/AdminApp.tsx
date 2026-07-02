@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { Calendar, FileText, Image as ImageIcon, LogOut, Trophy } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { LoginPage } from "./LoginPage";
@@ -8,6 +9,7 @@ import { LibraryAdmin } from "./LibraryAdmin";
 import { DayStonesAdmin } from "./DayStonesAdmin";
 import { PageShell } from "../components/PageShell";
 import { SiteHeader } from "../components/SiteHeader";
+import { EASE, fadeInUpSm } from "../motion/variants";
 
 type Tab = "events" | "gallery" | "library" | "day-stones";
 
@@ -39,7 +41,7 @@ export default function AdminApp() {
       <SiteHeader variant="admin" title="Admin">
         <button
           onClick={logout}
-          className="inline-flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground hover:text-gold-bright font-display"
+          className="inline-flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground hover:text-crimson-bright font-display"
         >
           <LogOut className="w-4 h-4" />
           Sign out
@@ -53,24 +55,33 @@ export default function AdminApp() {
             <button
               key={id}
               onClick={() => setTab(id)}
-              className={`inline-flex items-center gap-2 px-4 py-3 text-sm uppercase tracking-wider border-b-2 transition-colors font-display ${
-                active
-                  ? "text-gold border-gold"
-                  : "text-muted-foreground border-transparent hover:text-foreground"
+              className={`relative inline-flex items-center gap-2 px-4 py-3 text-sm uppercase tracking-wider transition-colors font-display ${
+                active ? "text-crimson-bright" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <Icon className="w-4 h-4" />
               {label}
+              {active && (
+                <motion.span
+                  layoutId="admin-tab-underline"
+                  className="absolute left-0 right-0 -bottom-px h-0.5 bg-crimson-bright"
+                  transition={{ duration: 0.3, ease: EASE }}
+                />
+              )}
             </button>
           );
         })}
       </nav>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {tab === "events" && <EventsAdmin />}
-        {tab === "gallery" && <GalleryAdmin />}
-        {tab === "library" && <LibraryAdmin />}
-        {tab === "day-stones" && <DayStonesAdmin />}
+        <AnimatePresence mode="wait">
+          <motion.div key={tab} variants={fadeInUpSm} initial="hidden" animate="show" exit={{ opacity: 0 }}>
+            {tab === "events" && <EventsAdmin />}
+            {tab === "gallery" && <GalleryAdmin />}
+            {tab === "library" && <LibraryAdmin />}
+            {tab === "day-stones" && <DayStonesAdmin />}
+          </motion.div>
+        </AnimatePresence>
       </main>
     </PageShell>
   );

@@ -4,6 +4,7 @@ import { CATEGORY_ACCENTS, type DayStoneCategory } from "../dayStones/constants"
 import { DayStoneEntryCard } from "./DayStoneEntryCard";
 import { GlassCard } from "./GlassCard";
 import { cn } from "./ui/utils";
+import { fadeInUpSm, staggerContainer } from "../motion/variants";
 
 type Props = {
   title: string;
@@ -51,25 +52,27 @@ export function DayStoneRecordBook({ title, category, entries, variant, animate 
             Names appear here once logged
           </p>
         </div>
+      ) : animate ? (
+        <motion.div
+          variants={staggerContainer(0.05)}
+          initial="hidden"
+          animate="show"
+          className={isFull ? "space-y-1" : "space-y-3"}
+          role="list"
+        >
+          {entries.map((entry) => (
+            <motion.div key={entry.id} role="listitem" variants={fadeInUpSm}>
+              <DayStoneEntryCard entry={entry} variant={variant} category={category} />
+            </motion.div>
+          ))}
+        </motion.div>
       ) : (
         <div className={isFull ? "space-y-1" : "space-y-3"} role="list">
-          {entries.map((entry, index) =>
-            animate ? (
-              <motion.div
-                key={entry.id}
-                role="listitem"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <DayStoneEntryCard entry={entry} variant={variant} category={category} />
-              </motion.div>
-            ) : (
-              <div key={entry.id} role="listitem">
-                <DayStoneEntryCard entry={entry} variant={variant} category={category} />
-              </div>
-            ),
-          )}
+          {entries.map((entry) => (
+            <div key={entry.id} role="listitem">
+              <DayStoneEntryCard entry={entry} variant={variant} category={category} />
+            </div>
+          ))}
         </div>
       )}
     </GlassCard>

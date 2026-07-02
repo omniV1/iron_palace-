@@ -1,6 +1,6 @@
 @custom-variant dark (&:is(.dark *));
 
-/* Iron Palace — black foundation + red accent (brand tokens still named gold* in Tailwind) */
+/* Iron Palace — black foundation + crimson accent, modern neutral-card system */
 :root {
   --font-size: 16px;
 
@@ -8,77 +8,86 @@
   --background: #000000;
   --foreground: #f5f5f5;
   --surface: #0a0a0a;
-  --surface-elevated: rgba(18, 10, 10, 0.78);
-  --card: rgba(22, 12, 12, 0.72);
+  --surface-elevated: #0c0c0c;
+  --card: rgba(255, 255, 255, 0.035);
   --card-foreground: #f5f5f5;
-  --popover: #121010;
+  --popover: #0f0f0f;
   --popover-foreground: #f5f5f5;
 
-  /* Brand red */
+  /* Brand crimson */
   --primary: #c41e1e;
   --primary-foreground: #fafafa;
-  --secondary: #1a1a1a;
+  --secondary: #171717;
   --secondary-foreground: #f5f5f5;
-  --muted: #171717;
+  --muted: #141414;
   --muted-foreground: #a3a3a3;
   --accent: rgba(196, 30, 30, 0.14);
   --accent-foreground: #fca5a5;
 
-  /* Accent scale (used as text-gold, border-gold, etc.) */
-  --gold: #dc2626;
-  --gold-bright: #ef4444;
-  --gold-muted: rgba(220, 38, 38, 0.14);
+  /* Accent scale (used as text-crimson, border-crimson, etc.) */
+  --crimson: #dc2626;
+  --crimson-bright: #ef4444;
+  --crimson-muted: rgba(220, 38, 38, 0.12);
 
   --destructive: #991b1b;
   --destructive-foreground: #ffffff;
 
   /* Borders & inputs */
-  --border: rgba(255, 255, 255, 0.08);
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-gold: rgba(220, 38, 38, 0.42);
+  --border: rgba(255, 255, 255, 0.09);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-crimson: rgba(220, 38, 38, 0.4);
   --input: rgba(255, 255, 255, 0.1);
-  --input-background: rgba(0, 0, 0, 0.55);
+  --input-background: rgba(255, 255, 255, 0.03);
   --switch-background: #3f3f46;
   --ring: rgba(239, 68, 68, 0.45);
+
+  /* Elevation — neutral depth, crimson only creeps in on hover */
+  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 10px 30px -12px rgba(0, 0, 0, 0.65);
+  --shadow-card-hover: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 20px 44px -14px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(220, 38, 38, 0.16);
+  --shadow-pop: 0 30px 80px -20px rgba(0, 0, 0, 0.75);
 
   --font-weight-medium: 500;
   --font-weight-normal: 400;
   --radius: 0.625rem;
-  --radius-card: 1rem;
+  --radius-card: 0.875rem;
 }
 
 .dark {
   --background: #000000;
   --foreground: #f5f5f5;
   --surface: #0a0a0a;
-  --surface-elevated: rgba(18, 10, 10, 0.78);
-  --card: rgba(22, 12, 12, 0.72);
+  --surface-elevated: #0c0c0c;
+  --card: rgba(255, 255, 255, 0.04);
   --card-foreground: #f5f5f5;
-  --popover: #121010;
+  --popover: #0f0f0f;
   --popover-foreground: #f5f5f5;
 
   --primary: #dc2626;
   --primary-foreground: #fafafa;
-  --secondary: #1a1a1a;
+  --secondary: #171717;
   --secondary-foreground: #f5f5f5;
-  --muted: #171717;
+  --muted: #141414;
   --muted-foreground: #a3a3a3;
   --accent: rgba(220, 38, 38, 0.16);
   --accent-foreground: #fecaca;
 
-  --gold: #ef4444;
-  --gold-bright: #f87171;
-  --gold-muted: rgba(239, 68, 68, 0.16);
+  --crimson: #ef4444;
+  --crimson-bright: #f87171;
+  --crimson-muted: rgba(239, 68, 68, 0.14);
 
   --destructive: #b91c1c;
   --destructive-foreground: #ffffff;
 
-  --border: rgba(255, 255, 255, 0.08);
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-gold: rgba(239, 68, 68, 0.48);
+  --border: rgba(255, 255, 255, 0.09);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-crimson: rgba(239, 68, 68, 0.46);
   --input: rgba(255, 255, 255, 0.1);
-  --input-background: rgba(0, 0, 0, 0.55);
+  --input-background: rgba(255, 255, 255, 0.03);
   --ring: rgba(248, 113, 113, 0.5);
+
+  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 10px 30px -12px rgba(0, 0, 0, 0.65);
+  --shadow-card-hover: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 20px 44px -14px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(239, 68, 68, 0.18);
+  --shadow-pop: 0 30px 80px -20px rgba(0, 0, 0, 0.8);
 }
 
 @theme inline {
@@ -98,18 +107,21 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
-  --color-gold: var(--gold);
-  --color-gold-bright: var(--gold-bright);
-  --color-gold-muted: var(--gold-muted);
+  --color-crimson: var(--crimson);
+  --color-crimson-bright: var(--crimson-bright);
+  --color-crimson-muted: var(--crimson-muted);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-border-subtle: var(--border-subtle);
-  --color-border-gold: var(--border-gold);
+  --color-border-crimson: var(--border-crimson);
   --color-input: var(--input);
   --color-input-background: var(--input-background);
   --color-switch-background: var(--switch-background);
   --color-ring: var(--ring);
+  --shadow-card: var(--shadow-card);
+  --shadow-card-hover: var(--shadow-card-hover);
+  --shadow-pop: var(--shadow-pop);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -177,16 +189,36 @@
     font-weight: var(--font-weight-normal);
     line-height: 1.5;
   }
+
+  ::selection {
+    background: rgba(220, 38, 38, 0.35);
+    color: #fff;
+  }
 }
 
+/* Home page — each section gently snaps to center as you scroll past it */
+html {
+  scroll-snap-type: y proximity;
+}
+
+#root > div > section,
+#root > div > footer {
+  scroll-snap-align: center;
+}
+
+/* The hero already fills the viewport; centering it is equivalent to start,
+   but footer/short sections benefit from being centered rather than pinned to the top. */
 @media (max-width: 767px) {
   html {
-    scroll-snap-type: y proximity;
     scroll-padding-top: 5rem;
   }
+}
 
-  #root > div > section,
-  #root > div > footer {
-    scroll-snap-align: start;
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

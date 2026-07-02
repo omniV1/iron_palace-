@@ -107,7 +107,7 @@ export function DayStoneEntryCard({ entry, variant = "full", category = entry.ca
       <div className="flex items-start gap-4">
         <Portrait entry={entry} size="md" portraitClass={portraitClass} />
         <div className="min-w-0 flex-1">
-          <p className="font-display font-medium text-lg group-hover:text-gold-bright/95 transition-colors">{entry.name}</p>
+          <p className="font-display font-medium text-lg group-hover:text-crimson-bright/95 transition-colors">{entry.name}</p>
           <p className="text-muted-foreground text-sm mt-0.5 tabular-nums">{entry.liftedAt}</p>
           {entry.notes && (
             <>
@@ -122,7 +122,7 @@ export function DayStoneEntryCard({ entry, variant = "full", category = entry.ca
                 <button
                   type="button"
                   onClick={() => setNotesExpanded((v) => !v)}
-                  className="text-gold/80 hover:text-gold-bright text-xs mt-1 uppercase tracking-wider font-display"
+                  className="text-crimson/80 hover:text-crimson-bright text-xs mt-1 uppercase tracking-wider font-display"
                 >
                   {notesExpanded ? "Show less" : "Read more"}
                 </button>

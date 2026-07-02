@@ -1,13 +1,15 @@
 import { useRef, useState, useEffect, type ChangeEvent, type FormEvent } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { Upload, X } from "lucide-react";
 import { api, type DayStoneEntry } from "../api";
 import { useDayStones } from "../hooks/useDayStones";
 import { DayStoneEntryCard } from "../components/DayStoneEntryCard";
 import { CollapsiblePanel } from "../components/CollapsiblePanel";
-import { GoldButton } from "../components/GoldButton";
+import { CrimsonButton } from "../components/CrimsonButton";
 import { inputClassName, labelClassName } from "../components/IconWell";
 import { CATEGORY_LABELS, MAX_PHOTO_BYTES } from "../dayStones/constants";
 import { splitByCategory } from "../dayStones/utils";
+import { fadeInUpSm } from "../motion/variants";
 import {
   AdminDeleteButton,
   AdminField,
@@ -172,7 +174,7 @@ export function DayStonesAdmin() {
                 <img
                   src={createPhotoPreview}
                   alt="Selected lifter photo preview"
-                  className="w-20 h-20 rounded-lg object-cover ring-1 ring-gold/30"
+                  className="w-20 h-20 rounded-lg object-cover ring-1 ring-crimson/30"
                 />
               )}
             </div>
@@ -180,9 +182,9 @@ export function DayStonesAdmin() {
 
           <AdminFormError message={formError} />
 
-          <GoldButton type="submit" variant="flat" disabled={submitting} className="w-full">
+          <CrimsonButton type="submit" variant="flat" disabled={submitting} className="w-full">
             {submitting ? "Saving…" : "Add to Record Book"}
-          </GoldButton>
+          </CrimsonButton>
         </AdminForm>
       </AdminFormCard>
 
@@ -234,22 +236,32 @@ function EntryGroup({
     <div>
       <AdminGroupHeading>{title}</AdminGroupHeading>
       <div className="space-y-3" role="list">
-        {entries.map((entry) => (
-          <div key={entry.id} role="listitem">
-            <DayStoneEntryCard
-              entry={entry}
-              variant="admin"
-              actions={
-                <EntryActions
-                  entry={entry}
-                  onDelete={() => onDelete(entry.id)}
-                  onPhotoUpload={(file) => onPhotoUpload(entry.id, file)}
-                  onPhotoRemove={() => onPhotoRemove(entry.id)}
-                />
-              }
-            />
-          </div>
-        ))}
+        <AnimatePresence initial={false}>
+          {entries.map((entry) => (
+            <motion.div
+              key={entry.id}
+              role="listitem"
+              layout
+              variants={fadeInUpSm}
+              initial="hidden"
+              animate="show"
+              exit={{ opacity: 0, x: -12, transition: { duration: 0.2 } }}
+            >
+              <DayStoneEntryCard
+                entry={entry}
+                variant="admin"
+                actions={
+                  <EntryActions
+                    entry={entry}
+                    onDelete={() => onDelete(entry.id)}
+                    onPhotoUpload={(file) => onPhotoUpload(entry.id, file)}
+                    onPhotoRemove={() => onPhotoRemove(entry.id)}
+                  />
+                }
+              />
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
     </div>
   );
@@ -294,7 +306,7 @@ function EntryActions({
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            className="inline-flex items-center gap-1 text-xs uppercase tracking-wider text-gold hover:text-gold-bright font-display"
+            className="inline-flex items-center gap-1 text-xs uppercase tracking-wider text-crimson hover:text-crimson-bright font-display"
           >
             <Upload className="w-3.5 h-3.5" />
             {entry.photoUrl ? "Change photo" : "Add photo"}

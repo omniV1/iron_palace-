@@ -4,6 +4,7 @@ import { CollapsiblePanel } from "./CollapsiblePanel";
 import { DayStonesHeroImage } from "./DayStonesHeroImage";
 import { DayStonesWeightGrid } from "./DayStonesWeightGrid";
 import { DayStonesCelticDivider } from "./DayStonesCelticDivider";
+import { fadeInUp, revealProps } from "../motion/variants";
 import {
   DAY_STONES_HERO,
   DAY_STONES_PREVIEW_DETAIL,
@@ -22,27 +23,16 @@ export function DayStonesIntro({ variant }: Props) {
 
   return (
     <>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={isPage ? { opacity: 1, y: 0 } : undefined}
-        whileInView={isPage ? undefined : { opacity: 1, y: 0 }}
-        viewport={isPage ? undefined : { once: true }}
-        className="text-center"
-      >
-        {isPage && (
-          <p className="text-gold/80 text-xs uppercase tracking-[0.35em] mb-4 font-display">
-            Record Books
-          </p>
-        )}
-
+      <div className="text-center">
         <SectionHeading
+          eyebrow={isPage ? "Record Books" : undefined}
           title={DAY_STONES_TITLE}
           subtitle={isPage ? DAY_STONES_TAGLINE : DAY_STONES_PREVIEW_LEAD}
           className={isPage ? "mb-8" : "mb-0"}
         />
 
         {isPage ? (
-          <>
+          <motion.div variants={fadeInUp} {...revealProps}>
             <CollapsiblePanel
               label="The setup"
               hint="Tap to view the stones"
@@ -57,13 +47,13 @@ export function DayStonesIntro({ variant }: Props) {
               {DAY_STONES_TAGLINE_DETAIL}
             </p>
             <DayStonesWeightGrid />
-          </>
+          </motion.div>
         ) : (
           <p className="text-muted-foreground text-sm md:text-base max-w-2xl mx-auto leading-relaxed mt-3">
             {DAY_STONES_PREVIEW_DETAIL}
           </p>
         )}
-      </motion.div>
+      </div>
 
       {isPage && <DayStonesCelticDivider />}
     </>

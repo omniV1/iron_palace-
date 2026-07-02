@@ -48,9 +48,9 @@ export const CATEGORY_ACCENTS: Record<
     portrait: "ring-border-subtle bg-surface text-muted-foreground",
   },
   no_straps: {
-    border: "border-t-gold",
+    border: "border-t-crimson",
     glow: "shadow-[0_0_32px_rgba(220,38,38,0.15)]",
-    label: "text-gold",
-    portrait: "ring-gold/30 bg-gold-muted text-gold",
+    label: "text-crimson",
+    portrait: "ring-crimson/30 bg-crimson-muted text-crimson",
   },
 };

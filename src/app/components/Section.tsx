@@ -13,7 +13,7 @@ export function Section({ id, children, className, variant = "default" }: Sectio
     <section
       id={id}
       className={cn(
-        "py-20 px-4",
+        "py-20 md:py-28 px-4 sm:px-6 lg:px-8",
         variant === "elevated" ? "bg-surface" : "bg-background",
         className
       )}

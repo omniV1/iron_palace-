@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { Calendar } from "lucide-react";
 import { api, type EventRecord } from "../api";
 import { useEvents } from "../hooks/useEvents";
-import { GoldButton } from "../components/GoldButton";
+import { CrimsonButton } from "../components/CrimsonButton";
 import { IconWell } from "../components/IconWell";
+import { fadeInUpSm } from "../motion/variants";
 import {
   AdminDeleteButton,
   AdminField,
@@ -77,9 +79,9 @@ export function EventsAdmin() {
 
           <AdminFormError message={formError} />
 
-          <GoldButton type="submit" variant="flat" disabled={submitting} className="w-full">
+          <CrimsonButton type="submit" variant="flat" disabled={submitting} className="w-full">
             {submitting ? "Saving…" : "Add Event"}
-          </GoldButton>
+          </CrimsonButton>
         </AdminForm>
       </AdminFormCard>
 
@@ -92,9 +94,11 @@ export function EventsAdmin() {
         isEmpty={events.length === 0}
       >
         <ul className="space-y-3">
-          {events.map((event) => (
-            <EventRow key={event.id} event={event} onDelete={() => handleDelete(event.id)} />
-          ))}
+          <AnimatePresence initial={false}>
+            {events.map((event) => (
+              <EventRow key={event.id} event={event} onDelete={() => handleDelete(event.id)} />
+            ))}
+          </AnimatePresence>
         </ul>
       </AdminListCard>
     </AdminPageGrid>
@@ -103,7 +107,13 @@ export function EventsAdmin() {
 
 function EventRow({ event, onDelete }: { event: EventRecord; onDelete: () => void }) {
   return (
-    <li>
+    <motion.li
+      layout
+      variants={fadeInUpSm}
+      initial="hidden"
+      animate="show"
+      exit={{ opacity: 0, x: -12, transition: { duration: 0.2 } }}
+    >
       <AdminListItem>
         <IconWell icon={Calendar} size="sm" />
         <div className="flex-1 min-w-0">
@@ -119,6 +129,6 @@ function EventRow({ event, onDelete }: { event: EventRecord; onDelete: () => voi
         </div>
         <AdminDeleteButton onClick={onDelete} />
       </AdminListItem>
-    </li>
+    </motion.li>
   );
 }

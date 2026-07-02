@@ -1,10 +1,12 @@
 import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { Upload } from "lucide-react";
 import { api } from "../api";
 import { useGallery } from "../hooks/useGallery";
 import { CollapsiblePanel } from "../components/CollapsiblePanel";
-import { GoldButton } from "../components/GoldButton";
+import { CrimsonButton } from "../components/CrimsonButton";
 import { inputClassName, labelClassName } from "../components/IconWell";
+import { scaleIn } from "../motion/variants";
 import {
   AdminDeleteButton,
   AdminForm,
@@ -96,10 +98,10 @@ export function GalleryAdmin() {
 
           <AdminFormError message={formError} />
 
-          <GoldButton type="submit" variant="flat" disabled={submitting || !file} className="w-full">
+          <CrimsonButton type="submit" variant="flat" disabled={submitting || !file} className="w-full">
             <Upload className="w-4 h-4" />
             {submitting ? "Uploading…" : "Upload"}
-          </GoldButton>
+          </CrimsonButton>
           <AdminFormHint>Max 4 MB. Images only.</AdminFormHint>
         </AdminForm>
       </AdminFormCard>
@@ -113,19 +115,29 @@ export function GalleryAdmin() {
         isEmpty={photos.length === 0}
       >
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {photos.map((photo) => (
-            <div key={photo.id} className="relative group rounded-lg overflow-hidden border border-border-subtle">
-              <img src={photo.url} alt={photo.caption || photo.filename} className="aspect-square w-full object-cover" />
-              {photo.caption && (
-                <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 to-transparent">
-                  <p className="text-foreground text-xs truncate">{photo.caption}</p>
+          <AnimatePresence initial={false}>
+            {photos.map((photo) => (
+              <motion.div
+                key={photo.id}
+                layout
+                variants={scaleIn}
+                initial="hidden"
+                animate="show"
+                exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+                className="relative group rounded-lg overflow-hidden border border-border-subtle transition-colors hover:border-white/20"
+              >
+                <img src={photo.url} alt={photo.caption || photo.filename} className="aspect-square w-full object-cover" />
+                {photo.caption && (
+                  <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 to-transparent">
+                    <p className="text-foreground text-xs truncate">{photo.caption}</p>
+                  </div>
+                )}
+                <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <AdminDeleteButton onClick={() => handleDelete(photo.id)} compact />
                 </div>
-              )}
-              <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <AdminDeleteButton onClick={() => handleDelete(photo.id)} compact />
-              </div>
-            </div>
-          ))}
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       </AdminListCard>
     </AdminPageGrid>

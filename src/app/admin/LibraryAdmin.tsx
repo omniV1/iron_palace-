@@ -1,11 +1,13 @@
 import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { FileText, Upload } from "lucide-react";
 import { api } from "../api";
 import { useLibrary } from "../hooks/useLibrary";
 import { CollapsiblePanel } from "../components/CollapsiblePanel";
-import { GoldButton } from "../components/GoldButton";
+import { CrimsonButton } from "../components/CrimsonButton";
 import { IconWell } from "../components/IconWell";
 import { inputClassName, labelClassName } from "../components/IconWell";
+import { fadeInUpSm } from "../motion/variants";
 import {
   AdminDeleteButton,
   AdminForm,
@@ -115,10 +117,10 @@ export function LibraryAdmin() {
 
           <AdminFormError message={formError} />
 
-          <GoldButton type="submit" variant="flat" disabled={submitting || !file} className="w-full">
+          <CrimsonButton type="submit" variant="flat" disabled={submitting || !file} className="w-full">
             <Upload className="w-4 h-4" />
             {submitting ? "Uploading…" : "Upload"}
-          </GoldButton>
+          </CrimsonButton>
           <AdminFormHint>Max 4 MB per file.</AdminFormHint>
         </AdminForm>
       </AdminFormCard>
@@ -132,29 +134,38 @@ export function LibraryAdmin() {
         isEmpty={files.length === 0}
       >
         <ul className="space-y-3">
-          {files.map((f) => (
-            <li key={f.id}>
-              <AdminListItem>
-                <IconWell icon={FileText} size="sm" />
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">{f.title}</p>
-                  {f.description && <p className="text-muted-foreground text-xs truncate">{f.description}</p>}
-                  <p className="text-muted-foreground/70 text-xs mt-1">
-                    {f.filename} · {formatBytes(f.size)}
-                  </p>
-                  <div className="mt-2 flex gap-3 text-xs">
-                    <a href={f.url} target="_blank" rel="noopener noreferrer" className="text-gold hover:text-gold-bright">
-                      Open
-                    </a>
-                    <a href={`${f.url}?download`} className="text-gold hover:text-gold-bright">
-                      Download
-                    </a>
+          <AnimatePresence initial={false}>
+            {files.map((f) => (
+              <motion.li
+                key={f.id}
+                layout
+                variants={fadeInUpSm}
+                initial="hidden"
+                animate="show"
+                exit={{ opacity: 0, x: -12, transition: { duration: 0.2 } }}
+              >
+                <AdminListItem>
+                  <IconWell icon={FileText} size="sm" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{f.title}</p>
+                    {f.description && <p className="text-muted-foreground text-xs truncate">{f.description}</p>}
+                    <p className="text-muted-foreground/70 text-xs mt-1">
+                      {f.filename} · {formatBytes(f.size)}
+                    </p>
+                    <div className="mt-2 flex gap-3 text-xs">
+                      <a href={f.url} target="_blank" rel="noopener noreferrer" className="text-crimson hover:text-crimson-bright">
+                        Open
+                      </a>
+                      <a href={`${f.url}?download`} className="text-crimson hover:text-crimson-bright">
+                        Download
+                      </a>
+                    </div>
                   </div>
-                </div>
-                <AdminDeleteButton onClick={() => handleDelete(f.id)} />
-              </AdminListItem>
-            </li>
-          ))}
+                  <AdminDeleteButton onClick={() => handleDelete(f.id)} />
+                </AdminListItem>
+              </motion.li>
+            ))}
+          </AnimatePresence>
         </ul>
       </AdminListCard>
     </AdminPageGrid>

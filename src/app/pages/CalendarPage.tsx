@@ -7,6 +7,7 @@ import { SiteHeader } from "../components/SiteHeader";
 import { SectionHeading } from "../components/SectionHeading";
 import { GlassCard } from "../components/GlassCard";
 import { IconWell } from "../components/IconWell";
+import { EASE, tapScaleSm } from "../motion/variants";
 
 type CalendarDay = {
   date: Date;
@@ -109,9 +110,7 @@ export default function CalendarPage() {
       <SiteHeader />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-16">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <SectionHeading title="Events Calendar" subtitle="Gold days have events — tap to see details" />
-        </motion.div>
+        <SectionHeading title="Events Calendar" subtitle="Highlighted days have events — tap to see details" />
 
         {loading && <p className="text-muted-foreground text-sm text-center">Loading events…</p>}
         {error && <p className="text-destructive text-sm text-center">Couldn't load events: {error}</p>}
@@ -119,31 +118,44 @@ export default function CalendarPage() {
         {!loading && !error && (
           <>
             <GlassCard className="flex items-center justify-between mb-6 p-4">
-              <button
+              <motion.button
+                {...tapScaleSm}
                 onClick={prevMonth}
                 className="p-2 hover:bg-white/5 rounded-lg transition-colors"
                 aria-label="Previous month"
               >
-                <ChevronLeft className="w-6 h-6 text-gold" />
-              </button>
-              <h2 className="font-display text-xl md:text-2xl font-light tracking-wide uppercase">{monthName}</h2>
-              <button
+                <ChevronLeft className="w-6 h-6 text-crimson-bright" />
+              </motion.button>
+              <AnimatePresence mode="wait">
+                <motion.h2
+                  key={monthName}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.2, ease: EASE }}
+                  className="font-display text-xl md:text-2xl font-light tracking-wide uppercase"
+                >
+                  {monthName}
+                </motion.h2>
+              </AnimatePresence>
+              <motion.button
+                {...tapScaleSm}
                 onClick={nextMonth}
                 className="p-2 hover:bg-white/5 rounded-lg transition-colors"
                 aria-label="Next month"
               >
-                <ChevronRight className="w-6 h-6 text-gold" />
-              </button>
+                <ChevronRight className="w-6 h-6 text-crimson-bright" />
+              </motion.button>
             </GlassCard>
 
             <GlassCard className="p-4 md:p-6 overflow-hidden">
               <div className="mb-4 flex flex-wrap items-center gap-4 text-xs md:text-sm text-muted-foreground">
                 <span className="inline-flex items-center gap-2">
-                  <span className="h-3 w-3 rounded border border-gold bg-gold-muted" aria-hidden />
+                  <span className="h-3 w-3 rounded border border-crimson bg-crimson-muted" aria-hidden />
                   Event scheduled
                 </span>
                 <span className="inline-flex items-center gap-2">
-                  <span className="h-3 w-3 rounded border border-gold bg-gold/20 ring-1 ring-gold" aria-hidden />
+                  <span className="h-3 w-3 rounded border border-crimson bg-crimson/20 ring-1 ring-crimson" aria-hidden />
                   Today
                 </span>
               </div>
@@ -152,7 +164,7 @@ export default function CalendarPage() {
                 {daysOfWeek.map((day) => (
                   <div
                     key={day}
-                    className="text-center text-xs md:text-sm font-medium text-gold uppercase tracking-wider py-2 font-display"
+                    className="text-center text-xs md:text-sm font-medium text-crimson uppercase tracking-wider py-2 font-display"
                   >
                     {day}
                   </div>
@@ -168,7 +180,9 @@ export default function CalendarPage() {
                     key={idx}
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: idx * 0.005 }}
+                    transition={{ delay: Math.min(idx * 0.008, 0.3), duration: 0.25, ease: EASE }}
+                    whileHover={hasEvents ? { scale: 1.04, y: -2 } : undefined}
+                    whileTap={hasEvents ? { scale: 0.97 } : undefined}
                     onClick={() => hasEvents && setSelectedDay(day)}
                     disabled={!hasEvents}
                     aria-label={
@@ -177,16 +191,16 @@ export default function CalendarPage() {
                         : `${day.dayOfMonth}`
                     }
                     className={`
-                      relative flex flex-col items-start gap-0.5 aspect-square p-1.5 md:p-2 rounded-lg border transition-all text-left overflow-hidden
+                      relative flex flex-col items-start gap-0.5 aspect-square p-1.5 md:p-2 rounded-lg border transition-colors text-left overflow-hidden
                       ${!day.isCurrentMonth ? "opacity-30 cursor-default" : ""}
                       ${hasEvents
-                        ? "border-gold bg-gold-muted shadow-[inset_0_0_0_1px_rgba(220,38,38,0.25)] cursor-pointer hover:border-gold-bright hover:bg-gold/20"
+                        ? "border-crimson bg-crimson-muted shadow-[inset_0_0_0_1px_rgba(220,38,38,0.25)] cursor-pointer hover:border-crimson-bright hover:bg-crimson/20"
                         : day.isToday
-                          ? "border-gold bg-gold/10"
+                          ? "border-crimson bg-crimson/10"
                           : "border-border-subtle cursor-default"
                       }
                       ${selectedDay?.date.getTime() === day.date.getTime()
-                        ? "ring-2 ring-gold-bright bg-gold/25 border-gold-bright"
+                        ? "ring-2 ring-crimson-bright bg-crimson/25 border-crimson-bright"
                         : ""
                       }
                     `}
@@ -194,13 +208,13 @@ export default function CalendarPage() {
                     <div className="flex w-full items-start justify-between gap-1">
                       <span
                         className={`font-display text-sm md:text-base leading-none ${
-                          hasEvents ? "font-semibold text-gold-bright" : day.isToday ? "font-bold text-gold" : ""
+                          hasEvents ? "font-semibold text-crimson-bright" : day.isToday ? "font-bold text-crimson" : ""
                         }`}
                       >
                         {day.dayOfMonth}
                       </span>
                       {hasEvents && (
-                        <span className="shrink-0 rounded-full bg-gold px-1.5 py-0.5 text-[10px] font-display uppercase tracking-wide text-black">
+                        <span className="shrink-0 rounded-full bg-crimson px-1.5 py-0.5 text-[10px] font-display uppercase tracking-wide text-black">
                           {day.events.length}
                         </span>
                       )}
@@ -211,7 +225,7 @@ export default function CalendarPage() {
                           {day.events[0].title}
                         </p>
                         {day.events.length > 1 && (
-                          <p className="text-[10px] text-gold-bright/80">+{day.events.length - 1} more</p>
+                          <p className="text-[10px] text-crimson-bright/80">+{day.events.length - 1} more</p>
                         )}
                       </div>
                     )}
@@ -227,9 +241,10 @@ export default function CalendarPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.35, ease: EASE }}
                   className="mt-6"
                 >
-                  <GlassCard className="p-6 border-border-gold">
+                  <GlassCard className="p-6 border-border-crimson">
                     <div className="flex items-start justify-between mb-4">
                       <div>
                         <h3 className="text-xl font-medium mb-1 font-display">
@@ -243,13 +258,14 @@ export default function CalendarPage() {
                           {selectedDay.events.length} event{selectedDay.events.length !== 1 ? "s" : ""}
                         </p>
                       </div>
-                      <button
+                      <motion.button
+                        {...tapScaleSm}
                         onClick={() => setSelectedDay(null)}
                         className="p-2 hover:bg-white/5 rounded-lg transition-colors"
                         aria-label="Close"
                       >
                         <X className="w-5 h-5 text-muted-foreground" />
-                      </button>
+                      </motion.button>
                     </div>
 
                     <div className="space-y-4">

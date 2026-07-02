@@ -10,22 +10,22 @@ type SiteHeaderProps = {
 
 export function SiteHeader({ variant = "subpage", title, children }: SiteHeaderProps) {
   return (
-    <header className="border-b border-border-subtle bg-background/80 backdrop-blur-md sticky top-0 z-40">
+    <header className="border-b border-border-subtle bg-background/85 backdrop-blur-md sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         <a
           href="/"
-          className="flex items-center gap-3 text-muted-foreground hover:text-gold-bright transition-colors shrink-0 w-24"
+          className="flex items-center gap-3 text-muted-foreground hover:text-crimson-bright transition-colors shrink-0 w-24"
         >
           {variant === "subpage" && (
             <span className="text-xs uppercase tracking-wider font-display">← Home</span>
           )}
         </a>
 
-        <a href="/" className="absolute left-1/2 -translate-x-1/2">
+        <a href="/" className="absolute left-1/2 -translate-x-1/2 transition-transform hover:scale-[1.03] duration-200">
           <img src={imgNewLogo} alt="The Iron Palace Podcast" className="h-12 w-auto" />
         </a>
 
-        <div className="flex items-center gap-3 shrink-0 w-24 justify-end">
+        <div className={cn("flex items-center gap-3 shrink-0 w-24 justify-end")}>
           {variant === "admin" && title && (
             <span className="text-xs uppercase tracking-wider text-muted-foreground font-display hidden sm:inline">
               {title}

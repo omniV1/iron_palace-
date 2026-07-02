@@ -1,8 +1,10 @@
 import type { FormEvent, ReactNode } from "react";
+import { motion } from "motion/react";
 import { Trash2 } from "lucide-react";
 import { GlassCard } from "../components/GlassCard";
 import { inputClassName, labelClassName } from "../components/IconWell";
 import { cn } from "../components/ui/utils";
+import { tapScaleSm } from "../motion/variants";
 
 export const adminFileInputClassName = `${inputClassName} file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-primary file:text-primary-foreground file:text-xs file:uppercase file:tracking-wider file:cursor-pointer`;
 
@@ -54,13 +56,14 @@ export function AdminListCard({
 
 export function AdminRefreshButton({ onClick }: { onClick: () => void }) {
   return (
-    <button
+    <motion.button
+      {...tapScaleSm}
       type="button"
       onClick={onClick}
-      className="text-xs text-muted-foreground hover:text-gold-bright uppercase tracking-wider font-display"
+      className="text-xs text-muted-foreground hover:text-crimson-bright uppercase tracking-wider font-display transition-colors"
     >
       Refresh
-    </button>
+    </motion.button>
   );
 }
 
@@ -75,26 +78,28 @@ export function AdminDeleteButton({
 }) {
   if (compact) {
     return (
-      <button
+      <motion.button
+        {...tapScaleSm}
         type="button"
         onClick={onClick}
-        className="text-muted-foreground hover:text-destructive p-1 shrink-0"
+        className="text-muted-foreground hover:text-destructive p-1 shrink-0 transition-colors"
         aria-label={label}
       >
         <Trash2 className="w-4 h-4" />
-      </button>
+      </motion.button>
     );
   }
 
   return (
-    <button
+    <motion.button
+      {...tapScaleSm}
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-1 text-xs uppercase tracking-wider text-muted-foreground hover:text-destructive font-display shrink-0"
+      className="inline-flex items-center gap-1 text-xs uppercase tracking-wider text-muted-foreground hover:text-destructive font-display shrink-0 transition-colors"
     >
       <Trash2 className="w-3.5 h-3.5" />
       {label}
-    </button>
+    </motion.button>
   );
 }
 
@@ -167,7 +172,7 @@ export function AdminFormHint({ children }: { children: ReactNode }) {
 
 export function AdminListItem({ children }: { children: ReactNode }) {
   return (
-    <div className="flex items-start gap-3 bg-input-background border border-border-subtle rounded-xl p-3">
+    <div className="flex items-start gap-3 bg-input-background border border-border-subtle rounded-xl p-3 transition-colors hover:border-white/15">
       {children}
     </div>
   );
