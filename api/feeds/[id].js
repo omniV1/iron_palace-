@@ -8,7 +8,7 @@ import { SHOP_URL, fetchShopProducts } from "../_lib/shop.js";
 import { CHANNEL_ID, fetchLatestFeed } from "../_lib/youtube.js";
 import { sendError } from "../_lib/respond.js";
 
-async function shop(res) {
+async function shop(req, res) {
   const products = await fetchShopProducts();
   res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=3600");
   return res.status(200).json({ products, shopUrl: SHOP_URL });
@@ -17,7 +17,14 @@ async function shop(res) {
 /** Last good feed on this warm instance, served if YouTube has a hiccup. */
 let lastGoodFeed = null;
 
-async function youtube(res) {
+async function youtube(req, res) {
+  // ?debug=1 shows how each upload was sorted; never cached.
+  if (req.query.debug) {
+    const { feed, notes } = await fetchLatestFeed({ debug: true });
+    res.setHeader("Cache-Control", "no-store");
+    return res.status(feed ? 200 : 502).json({ ...feed, details: notes });
+  }
+
   const { feed, notes } = await fetchLatestFeed();
   if (feed) {
     lastGoodFeed = { channelId: CHANNEL_ID, fetchedAt: new Date().toISOString(), ...feed };
@@ -50,7 +57,7 @@ export default async function handler(req, res) {
     }
     const feed = feeds[req.query.id];
     if (!feed) return res.status(404).json({ error: "unknown feed" });
-    return await feed(res);
+    return await feed(req, res);
   } catch (err) {
     return sendError(res, err, "[api/feeds]");
   }

@@ -206,12 +206,12 @@ function durationSeconds(iso = "") {
 
 /**
  * YouTube Data API v3 — used when YOUTUBE_API_KEY is set; reliable from Vercel.
- * Reads the latest 50 uploads and sorts each into a tab: anything with live-stream
- * details is a livestream; Shorts are anything a minute or shorter, plus whatever the
+ * Reads the latest 50 uploads and sorts each into a tab: livestreams are what the Live
+ * playlist lists (or, if YouTube won't serve it, anything with live-stream details); Shorts are anything a minute or shorter, plus whatever the
  * Shorts playlist lists when YouTube serves it (otherwise anything 3 minutes or shorter).
  */
-export async function fetchFromDataApi(apiKey) {
-  const [listRes, shortIds] = await Promise.all([
+export async function fetchFromDataApi(apiKey, { debug = false } = {}) {
+  const [listRes, shortIds, liveIds] = await Promise.all([
     fetch(
       dataApiUrl("playlistItems", {
         part: "snippet,contentDetails",
@@ -221,6 +221,7 @@ export async function fetchFromDataApi(apiKey) {
       }),
     ),
     fetchPlaylistIds(apiKey, SHORTS_PLAYLIST_ID),
+    fetchPlaylistIds(apiKey, LIVE_PLAYLIST_ID),
   ]);
   if (!listRes.ok) throw new Error(`uploads HTTP ${listRes.status}${await googleError(listRes)}`);
   const items = ((await listRes.json()).items || []).filter(
@@ -258,16 +259,39 @@ export async function fetchFromDataApi(apiKey) {
   });
 
   const useShortsPlaylist = shortIds !== null && shortIds.size > 0;
-  return categorize(
-    uploads,
-    (v) => Boolean(details.get(v.videoId)?.liveStreamingDetails),
-    (v) => {
-      const secs = durationSeconds(details.get(v.videoId)?.contentDetails?.duration);
-      if (secs > 0 && secs <= 60) return true;
-      if (useShortsPlaylist) return shortIds.has(v.videoId);
-      return secs > 0 && secs <= SHORTS_MAX_SECONDS;
+  // Premieres carry liveStreamingDetails too, so prefer YouTube's own Live tab playlist,
+  // which lists real streams only.
+  const useLivePlaylist = liveIds !== null && liveIds.size > 0;
+  const isLive = (v) =>
+    useLivePlaylist ? liveIds.has(v.videoId) : Boolean(details.get(v.videoId)?.liveStreamingDetails);
+  const isShort = (v) => {
+    const secs = durationSeconds(details.get(v.videoId)?.contentDetails?.duration);
+    if (secs > 0 && secs <= 60) return true;
+    if (useShortsPlaylist) return shortIds.has(v.videoId);
+    return secs > 0 && secs <= SHORTS_MAX_SECONDS;
+  };
+
+  const feed = categorize(uploads, isLive, isShort);
+  if (!debug) return feed;
+  return {
+    ...feed,
+    debug: {
+      livePlaylist: liveIds === null ? "unavailable" : `${liveIds.size} items`,
+      shortsPlaylist: shortIds === null ? "unavailable" : `${shortIds.size} items`,
+      uploads: uploads.map((v) => {
+        const d = details.get(v.videoId);
+        return {
+          title: v.title,
+          published: v.published,
+          duration: d?.contentDetails?.duration ?? null,
+          liveDetails: Boolean(d?.liveStreamingDetails),
+          inLivePlaylist: liveIds?.has(v.videoId) ?? null,
+          inShortsPlaylist: shortIds?.has(v.videoId) ?? null,
+          category: isLive(v) ? "live" : isShort(v) ? "shorts" : "videos",
+        };
+      }),
     },
-  );
+  };
 }
 
 const hasAny = (feed) => CATEGORIES.some((c) => feed[c].length > 0);
@@ -276,14 +300,14 @@ const hasAny = (feed) => CATEGORIES.some((c) => feed[c].length > 0);
  * Latest uploads split into { videos, shorts, live }. Tries the Data API (if configured),
  * then RSS. Returns { feed: null, notes } when both fail; notes say why, for debugging.
  */
-export async function fetchLatestFeed() {
+export async function fetchLatestFeed({ debug = false } = {}) {
   const notes = [];
   const apiKey = process.env.YOUTUBE_API_KEY;
   if (!apiKey) {
     notes.push("data api: YOUTUBE_API_KEY is not set for this deployment");
   } else {
     try {
-      const feed = await fetchFromDataApi(apiKey);
+      const feed = await fetchFromDataApi(apiKey, { debug });
       if (hasAny(feed)) return { feed, notes };
       notes.push("data api: no uploads returned");
     } catch (err) {
