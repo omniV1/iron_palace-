@@ -46,6 +46,19 @@ export type DayStoneEntry = {
   updatedAt?: string;
 };
 
+export type ShopProduct = {
+  id: string;
+  title: string;
+  handle: string;
+  price: string;
+  available: boolean;
+  image: string | null;
+  imageAlt: string;
+  url: string;
+};
+
+export const SHOP_URL = "https://wudaqc-iw.myshopify.com";
+
 async function handle<T>(res: Response): Promise<T> {
   if (!res.ok) {
     let message = `HTTP ${res.status}`;
@@ -84,6 +97,12 @@ export const api = {
       body: JSON.stringify({ action: "logout" }),
     });
     return handle(res);
+  },
+
+  async listShopProducts(): Promise<ShopProduct[]> {
+    const res = await fetch("/api/shop");
+    const data = await handle<{ products: ShopProduct[] }>(res);
+    return data.products;
   },
 
   async listEvents(): Promise<EventRecord[]> {

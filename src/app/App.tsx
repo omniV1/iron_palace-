@@ -9,6 +9,8 @@ import { IconWell } from "./components/IconWell";
 import { useYouTubeVideos, timeAgo } from "./hooks/useYouTubeVideos";
 import { useEvents } from "./hooks/useEvents";
 import { useGallery } from "./hooks/useGallery";
+import { useShopProducts } from "./hooks/useShopProducts";
+import { SHOP_URL } from "./api";
 import { useLibrary } from "./hooks/useLibrary";
 import { useDayStones } from "./hooks/useDayStones";
 import { DayStonesIntro } from "./components/DayStonesIntro";
@@ -16,9 +18,6 @@ import { DayStonesHomePreview } from "./components/DayStonesHomePreview";
 import { previewEntries, splitByCategory } from "./dayStones/utils";
 import { EASE, fadeInUp, fadeInUpSm, revealProps, scaleIn, staggerContainer, tapScaleSm } from "./motion/variants";
 
-import imgMerchDragon from "../imports/Group2/9fe969f07b1189f5a7e8d627018c5bf063261cab.png?w=800&format=webp&quality=80";
-import imgMerchWhite from "../imports/Group2/0e04069fb44385863cd0bed92320736368ccc2bc.png?w=800&format=webp&quality=80";
-import imgMerchGrey from "../imports/Group2/27719387f55cc5e04ab298523fd29ec98849c475.png?w=800&format=webp&quality=80";
 import imgLifting from "../imports/Group2/b5fff0d1593285f075f46cfdc89c44bd3b39097f.png?w=1920&format=webp&quality=75";
 import imgImg20281 from "../imports/Group2/3079c0be861de6bc379a6ca769dbf0748207144a.png?w=600&format=webp&quality=80";
 import imgImg20291 from "../imports/Group2/ce8df0c659a26b7d011b713b1e18821bf06bf4e1.png?w=600&format=webp&quality=80";
@@ -63,12 +62,6 @@ const crewMembers = [
   },
 ];
 
-const merchItems = [
-  { id: 1, name: "Dragon Logo Tee", price: "$29.99", image: imgMerchDragon },
-  { id: 2, name: "Classic White Tee", price: "$24.99", image: imgMerchWhite },
-  { id: 3, name: "Premium Grey Tee", price: "$27.99", image: imgMerchGrey },
-];
-
 // Fallback photos shown when no admin uploads exist yet.
 const defaultGalleryPhotos: { url: string; caption: string }[] = [
   { url: imgCommunity1, caption: "" },
@@ -96,6 +89,7 @@ export default function App() {
   const { videos, loading: videosLoading, error: videosError } = useYouTubeVideos(15);
   const { events: liveEvents } = useEvents();
   const { photos: livePhotos } = useGallery();
+  const { products: shopProducts, loading: shopLoading } = useShopProducts();
   const { files: libraryFiles } = useLibrary();
   const { entries: dayStoneEntries } = useDayStones();
 
@@ -358,17 +352,6 @@ export default function App() {
           >
             The World's Most Anabolic Podcast
           </motion.p>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1, y: [0, 6, 0] }}
-            transition={{ opacity: { delay: 0.9, duration: 0.6 }, y: prefersReducedMotion ? undefined : { duration: 2, repeat: Infinity, ease: "easeInOut", delay: 1.2 } }}
-            className="mt-14 flex justify-center"
-            aria-hidden
-          >
-            <div className="h-9 w-5 rounded-full border border-white/25 flex items-start justify-center p-1.5">
-              <div className="h-1.5 w-1.5 rounded-full bg-crimson-bright" />
-            </div>
-          </motion.div>
         </motion.div>
       </section>
 
@@ -619,37 +602,65 @@ export default function App() {
         <div className="max-w-7xl mx-auto">
           <SectionHeading title="Featured Merchandise" className="mb-16" />
 
-          <motion.div
-            variants={staggerContainer(0.1)}
-            {...revealProps}
-            className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12"
-          >
-            {merchItems.map((item) => (
-              <motion.div
-                key={item.id}
-                variants={fadeInUp}
-                whileHover={{ y: -6 }}
-                transition={{ type: "spring", stiffness: 260, damping: 24 }}
-                className="group cursor-pointer"
-              >
-                <div className="relative overflow-hidden rounded-2xl border border-white/15 aspect-square mb-4 shadow-lg shadow-black/40 transition-colors duration-300 ring-1 ring-white/10 group-hover:border-crimson/40">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    loading="lazy"
-                    decoding="async"
-                    className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500 ease-out"
-                  />
+          {shopLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-12 max-w-4xl mx-auto">
+              {[0, 1].map((i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="rounded-2xl border border-white/10 aspect-square mb-4 bg-white/5" />
+                  <div className="h-5 w-2/3 rounded bg-white/10 mb-2" />
+                  <div className="h-4 w-1/4 rounded bg-white/10" />
                 </div>
-                <h3 className="font-display text-lg font-light uppercase tracking-wide mb-2 group-hover:text-crimson-bright transition-colors">{item.name}</h3>
-                <p className="text-muted-foreground text-base">{item.price}</p>
-              </motion.div>
-            ))}
-          </motion.div>
+              ))}
+            </div>
+          ) : shopProducts.length > 0 ? (
+            <motion.div
+              variants={staggerContainer(0.1)}
+              {...revealProps}
+              className={`grid grid-cols-1 gap-8 mb-12 mx-auto ${
+                shopProducts.length >= 3 ? "md:grid-cols-3 max-w-7xl" : "sm:grid-cols-2 max-w-4xl"
+              }`}
+            >
+              {shopProducts.map((item) => (
+                <motion.a
+                  key={item.id}
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  variants={fadeInUp}
+                  whileHover={{ y: -6 }}
+                  transition={{ type: "spring", stiffness: 260, damping: 24 }}
+                  className="group block"
+                >
+                  <div className="relative overflow-hidden rounded-2xl border border-white/15 aspect-square mb-4 shadow-lg shadow-black/40 transition-colors duration-300 ring-1 ring-white/10 group-hover:border-crimson/40 bg-white/5">
+                    {item.image && (
+                      <img
+                        src={item.image}
+                        alt={item.imageAlt}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500 ease-out"
+                      />
+                    )}
+                    {!item.available && (
+                      <span className="absolute top-3 left-3 rounded-full bg-black/70 px-3 py-1 text-xs uppercase tracking-wider">
+                        Sold out
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="font-display text-lg font-light uppercase tracking-wide mb-2 group-hover:text-crimson-bright transition-colors">{item.title}</h3>
+                  <p className="text-muted-foreground text-base">{item.price}</p>
+                </motion.a>
+              ))}
+            </motion.div>
+          ) : (
+            <p className="text-center text-muted-foreground mb-12">
+              Check out the latest gear in our store.
+            </p>
+          )}
 
           <div className="text-center">
             <a
-              href="https://www.etsy.com/shop/KDayDreamDesigns?dd_referrer="
+              href={SHOP_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block relative overflow-hidden group rounded-lg"
