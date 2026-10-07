@@ -1,6 +1,6 @@
 /**
  * Writes public/youtube-videos.json at build time. This is only a fallback snapshot:
- * the site loads the live list from /api/youtube at runtime, and uses this file
+ * the site loads the live list from /api/feeds/youtube at runtime, and uses this file
  * only if that endpoint is unavailable.
  *
  * YouTube often blocks or errors for datacenter IPs (e.g. Vercel). If fetch fails, we still
@@ -35,7 +35,7 @@ if (videos && videos.length > 0) {
 }
 
 console.warn(
-  "fetch-youtube-feed: feed unreachable from this network (common on cloud build VMs). Build continues; the site loads /api/youtube at runtime.",
+  "fetch-youtube-feed: feed unreachable from this network (common on cloud build VMs). Build continues; the site loads /api/feeds/youtube at runtime.",
 );
-writePayload([], "feed_unavailable_at_build — runtime uses /api/youtube");
+writePayload([], "feed_unavailable_at_build — runtime uses /api/feeds/youtube");
 process.exit(0);

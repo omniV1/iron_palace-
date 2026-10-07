@@ -1,5 +1,3 @@
-import { sendError } from "../_lib/respond.js";
-
 export const SHOP_URL = "https://wudaqc-iw.myshopify.com";
 
 function formatPrice(amount) {
@@ -25,27 +23,16 @@ function serialize(product) {
   };
 }
 
-export default async function handler(req, res) {
-  try {
-    if (req.method !== "GET") {
-      res.setHeader("Allow", "GET");
-      return res.status(405).json({ error: "method not allowed" });
-    }
-
-    const upstream = await fetch(`${SHOP_URL}/products.json?limit=250`, {
-      headers: { Accept: "application/json" },
-    });
-    if (!upstream.ok) {
-      const err = new Error(`shop responded ${upstream.status}`);
-      err.statusCode = 502;
-      throw err;
-    }
-    const data = await upstream.json();
-    const products = (data.products || []).map(serialize);
-
-    res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=3600");
-    return res.status(200).json({ products, shopUrl: SHOP_URL });
-  } catch (err) {
-    return sendError(res, err, "[api/shop]");
+/** Fetches all published products from the Shopify store. */
+export async function fetchShopProducts() {
+  const upstream = await fetch(`${SHOP_URL}/products.json?limit=250`, {
+    headers: { Accept: "application/json" },
+  });
+  if (!upstream.ok) {
+    const err = new Error(`shop responded ${upstream.status}`);
+    err.statusCode = 502;
+    throw err;
   }
+  const data = await upstream.json();
+  return (data.products || []).map(serialize);
 }

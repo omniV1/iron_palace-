@@ -398,7 +398,7 @@ export default function App() {
         </div>
       </Section>
 
-      {/* Recent Episodes Grid — live from /api/youtube */}
+      {/* Recent Episodes Grid — live from /api/feeds/youtube */}
       <Section>
         <div className="max-w-7xl mx-auto">
           <SectionHeading title="Recent Episodes" subtitle="Catch up on what you missed" />

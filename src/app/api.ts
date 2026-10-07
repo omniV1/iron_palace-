@@ -100,7 +100,7 @@ export const api = {
   },
 
   async listShopProducts(): Promise<ShopProduct[]> {
-    const res = await fetch("/api/shop");
+    const res = await fetch("/api/feeds/shop");
     const data = await handle<{ products: ShopProduct[] }>(res);
     return data.products;
   },

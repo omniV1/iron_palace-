@@ -13,7 +13,7 @@ const CACHE_KEY = "ipp_yt_videos";
 const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 
 /** Live feed first; the build-time snapshot only if the API is down. */
-const FEED_URLS = ["/api/youtube", `${import.meta.env.BASE_URL}youtube-videos.json`];
+const FEED_URLS = ["/api/feeds/youtube", `${import.meta.env.BASE_URL}youtube-videos.json`];
 
 function sortNewestFirst(videos: YouTubeVideo[]): YouTubeVideo[] {
   return [...videos].sort(
@@ -26,7 +26,7 @@ interface CacheEntry {
   timestamp: number;
 }
 
-/** Shape of /api/youtube and the build-time fallback youtube-videos.json */
+/** Shape of /api/feeds/youtube and the build-time fallback youtube-videos.json */
 interface FeedResponse {
   channelId: string;
   fetchedAt: string;

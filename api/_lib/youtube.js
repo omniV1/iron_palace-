@@ -1,5 +1,5 @@
 /**
- * Shared YouTube feed helpers used by /api/youtube (runtime) and
+ * Shared YouTube feed helpers used by /api/feeds/youtube (runtime) and
  * scripts/fetch-youtube-feed.mjs (build-time fallback snapshot).
  */
 
