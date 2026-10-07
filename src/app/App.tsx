@@ -6,7 +6,7 @@ import { SectionHeading } from "./components/SectionHeading";
 import { GlassCard } from "./components/GlassCard";
 import { CrimsonButton } from "./components/CrimsonButton";
 import { IconWell } from "./components/IconWell";
-import { useYouTubeVideos, timeAgo } from "./hooks/useYouTubeVideos";
+import { useYouTubeVideos, timeAgo, type VideoCategory } from "./hooks/useYouTubeVideos";
 import { useEvents } from "./hooks/useEvents";
 import { useGallery } from "./hooks/useGallery";
 import { useShopProducts } from "./hooks/useShopProducts";
@@ -86,7 +86,8 @@ export default function App() {
   const [hoveredCrew, setHoveredCrew] = useState<number | null>(null);
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
   const prefersReducedMotion = useReducedMotion();
-  const { videos, loading: videosLoading, error: videosError } = useYouTubeVideos(15);
+  const { videos, shorts, live, loading: videosLoading, error: videosError } = useYouTubeVideos(15);
+  const [videoTab, setVideoTab] = useState<VideoCategory>("videos");
   const { events: liveEvents } = useEvents();
   const { photos: livePhotos } = useGallery();
   const { products: shopProducts, loading: shopLoading } = useShopProducts();
@@ -398,85 +399,130 @@ export default function App() {
         </div>
       </Section>
 
-      {/* Recent Episodes Grid — live from /api/feeds/youtube */}
+      {/* Recent Episodes — live from /api/feeds/youtube, split like the channel's tabs */}
       <Section>
         <div className="max-w-7xl mx-auto">
           <SectionHeading title="Recent Episodes" subtitle="Catch up on what you missed" />
 
-          {videosLoading ? (
-            <div className="overflow-x-auto pb-2 [scrollbar-width:thin]">
-              <div className="flex w-max max-w-full mx-auto gap-5 snap-x snap-mandatory">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-[min(85vw,300px)] flex-shrink-0 snap-start animate-pulse"
-                  >
-                    <div className="aspect-video bg-zinc-800 rounded-xl mb-3" />
-                    <div className="h-4 bg-zinc-800 rounded w-3/4 mb-2" />
-                    <div className="h-3 bg-zinc-800 rounded w-1/2" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : videosError || videos.length <= 1 ? (
-            <div className="max-w-lg mx-auto text-center py-8 px-4">
-              <p className="text-zinc-400 text-sm mb-4">
-                {videosError
-                  ? "We couldn’t load the episode list right now."
-                  : "More episodes will show here once additional uploads are available."}
-              </p>
-              <a
-                href="https://www.youtube.com/@TheIronPalacePodcast"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-crimson/90 hover:text-crimson-bright underline underline-offset-2"
-              >
-                Browse all episodes on YouTube
-              </a>
-            </div>
-          ) : (
-            <div className="overflow-x-auto pb-2 [scrollbar-width:thin]">
-              <motion.div
-                variants={staggerContainer(0.06)}
-                initial="hidden"
-                whileInView="show"
-                viewport={{ once: true, margin: "-60px" }}
-                className="flex w-max max-w-full mx-auto gap-5 snap-x snap-mandatory pb-1"
-              >
-                {videos.slice(1, 4).map((video) => (
-                  <motion.div
-                    key={video.videoId}
-                    variants={fadeInUpSm}
-                    whileHover={{ y: -6 }}
-                    transition={{ type: "spring", stiffness: 260, damping: 24 }}
-                    className="group w-[min(85vw,300px)] flex-shrink-0 snap-start cursor-pointer text-left"
-                    onClick={() => setActiveVideoId(video.videoId)}
-                  >
-                    <div className="relative aspect-video rounded-xl overflow-hidden ring-1 ring-white/10 shadow-lg shadow-black/40 mb-3">
-                      <img
-                        src={video.thumbnail}
-                        alt={video.title}
-                        loading="lazy"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute inset-0 bg-black/20 sm:bg-black/0 group-hover:bg-black/40 transition-colors duration-300 flex items-center justify-center">
-                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-crimson/90 flex items-center justify-center opacity-80 sm:opacity-0 group-hover:opacity-100 scale-90 sm:scale-75 group-hover:scale-100 transition-all duration-300 shadow-lg shadow-crimson/30">
-                          <Play className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground ml-0.5" fill="currentColor" />
-                        </div>
-                      </div>
-                    </div>
-                    <h3 className="text-sm font-medium line-clamp-2 group-hover:text-crimson-bright transition-colors duration-200">
-                      {video.title}
-                    </h3>
-                    <p className="text-xs text-zinc-500 mt-1">
-                      {video.views.toLocaleString()} views &middot; {timeAgo(video.published)}
-                    </p>
-                  </motion.div>
-                ))}
-              </motion.div>
-            </div>
-          )}
+          {(() => {
+            const tabs: { id: VideoCategory; label: string; items: typeof videos; channelPath: string }[] = [
+              // The newest regular video is already in the player above.
+              { id: "videos", label: "Videos", items: videos.slice(1, 7), channelPath: "videos" },
+              { id: "shorts", label: "Shorts", items: shorts.slice(0, 8), channelPath: "shorts" },
+              { id: "live", label: "Livestreams", items: live.slice(0, 6), channelPath: "streams" },
+            ];
+            const active = tabs.find((t) => t.id === videoTab) ?? tabs[0];
+            const isShorts = active.id === "shorts";
+            const cardWidth = isShorts ? "w-[min(42vw,190px)]" : "w-[min(85vw,300px)]";
+            const channelUrl = `https://www.youtube.com/@TheIronPalacePodcast/${active.channelPath}`;
 
+            return (
+              <>
+                <div role="tablist" aria-label="Episode type" className="flex flex-wrap justify-center gap-2 mb-8">
+                  {tabs.map((tab) => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={tab.id === active.id}
+                      onClick={() => setVideoTab(tab.id)}
+                      className={`rounded-full px-5 py-2 text-xs sm:text-sm uppercase tracking-wider font-display transition-colors duration-200 border ${
+                        tab.id === active.id
+                          ? "bg-crimson border-crimson text-primary-foreground"
+                          : "border-white/15 text-zinc-300 hover:border-crimson/50 hover:text-crimson-bright"
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                {videosLoading ? (
+                  <div className="overflow-x-auto pb-2 [scrollbar-width:thin]">
+                    <div className="flex w-max max-w-full mx-auto gap-5 snap-x snap-mandatory">
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <div key={i} className={`${cardWidth} flex-shrink-0 snap-start animate-pulse`}>
+                          <div className={`${isShorts ? "aspect-[9/16]" : "aspect-video"} bg-zinc-800 rounded-xl mb-3`} />
+                          <div className="h-4 bg-zinc-800 rounded w-3/4 mb-2" />
+                          <div className="h-3 bg-zinc-800 rounded w-1/2" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : videosError || active.items.length === 0 ? (
+                  <div className="max-w-lg mx-auto text-center py-8 px-4">
+                    <p className="text-zinc-400 text-sm mb-4">
+                      {videosError
+                        ? "We couldn’t load the episode list right now."
+                        : `No ${active.label.toLowerCase()} to show yet.`}
+                    </p>
+                    <a
+                      href={channelUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-crimson/90 hover:text-crimson-bright underline underline-offset-2"
+                    >
+                      Browse all on YouTube
+                    </a>
+                  </div>
+                ) : (
+                  <>
+                    <div className="overflow-x-auto pb-2 [scrollbar-width:thin]">
+                      <motion.div
+                        key={active.id}
+                        variants={staggerContainer(0.06)}
+                        initial="hidden"
+                        animate="show"
+                        className="flex w-max max-w-full mx-auto gap-5 snap-x snap-mandatory pb-1"
+                      >
+                        {active.items.map((video) => (
+                          <motion.div
+                            key={video.videoId}
+                            variants={fadeInUpSm}
+                            whileHover={{ y: -6 }}
+                            transition={{ type: "spring", stiffness: 260, damping: 24 }}
+                            className={`group ${cardWidth} flex-shrink-0 snap-start cursor-pointer text-left`}
+                            onClick={() => setActiveVideoId(video.videoId)}
+                          >
+                            <div className={`relative ${isShorts ? "aspect-[9/16]" : "aspect-video"} rounded-xl overflow-hidden ring-1 ring-white/10 shadow-lg shadow-black/40 mb-3`}>
+                              <img
+                                src={video.thumbnail}
+                                alt={video.title}
+                                loading="lazy"
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                              <div className="absolute inset-0 bg-black/20 sm:bg-black/0 group-hover:bg-black/40 transition-colors duration-300 flex items-center justify-center">
+                                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-crimson/90 flex items-center justify-center opacity-80 sm:opacity-0 group-hover:opacity-100 scale-90 sm:scale-75 group-hover:scale-100 transition-all duration-300 shadow-lg shadow-crimson/30">
+                                  <Play className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground ml-0.5" fill="currentColor" />
+                                </div>
+                              </div>
+                            </div>
+                            <h3 className="text-sm font-medium line-clamp-2 group-hover:text-crimson-bright transition-colors duration-200">
+                              {video.title}
+                            </h3>
+                            <p className="text-xs text-zinc-500 mt-1">
+                              {video.views.toLocaleString()} views &middot; {timeAgo(video.published)}
+                            </p>
+                          </motion.div>
+                        ))}
+                      </motion.div>
+                    </div>
+                    <div className="text-center mt-6">
+                      <a
+                        href={channelUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-crimson hover:text-crimson-bright text-sm uppercase tracking-wider transition-colors font-display group"
+                      >
+                        All {active.label.toLowerCase()} on YouTube
+                        <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
+                      </a>
+                    </div>
+                  </>
+                )}
+              </>
+            );
+          })()}
         </div>
       </Section>
 

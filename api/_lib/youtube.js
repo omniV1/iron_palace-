@@ -4,10 +4,18 @@
  */
 
 export const CHANNEL_ID = "UC9tV0Z2xN1HtvQu5F-ERqpg";
-export const UPLOADS_PLAYLIST_ID = `UU${CHANNEL_ID.slice(2)}`;
-/** YouTube's auto-generated "Videos" tab playlist: regular uploads only, no live streams or Shorts. */
-export const VIDEOS_PLAYLIST_ID = `UULF${CHANNEL_ID.slice(2)}`;
-const RSS_URL = `https://www.youtube.com/feeds/videos.xml?playlist_id=${VIDEOS_PLAYLIST_ID}`;
+/**
+ * YouTube's auto-generated per-channel playlists, matching the channel's tabs:
+ * UULF = Videos, UUSH = Shorts, UULV = Live. They 404 when the channel has none of that kind.
+ */
+const CHANNEL_SUFFIX = CHANNEL_ID.slice(2);
+export const CATEGORY_PLAYLISTS = {
+  videos: `UULF${CHANNEL_SUFFIX}`,
+  shorts: `UUSH${CHANNEL_SUFFIX}`,
+  live: `UULV${CHANNEL_SUFFIX}`,
+};
+export const CATEGORIES = Object.keys(CATEGORY_PLAYLISTS);
+const MAX_PER_CATEGORY = 15;
 
 /** Browser-like headers — plain "bot" User-Agents often get 403/404 from YouTube on cloud IPs. */
 const BROWSER_HEADERS = {
@@ -79,105 +87,123 @@ export function parseYouTubeRssXml(xml) {
   return normalizeVideos(videos);
 }
 
-/** Channel RSS feed (no key needed, but YouTube sometimes blocks cloud IPs). */
-export async function fetchFromRss() {
+/** Marks a playlist that doesn't exist (the channel has nothing of that kind). */
+const EMPTY = Symbol("empty");
+
+/** One playlist's RSS feed (no key needed, but YouTube sometimes blocks cloud IPs). */
+async function fetchPlaylistRss(playlistId) {
   const userAgents = [
     BROWSER_HEADERS["User-Agent"],
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
   ];
+  const url = `https://www.youtube.com/feeds/videos.xml?playlist_id=${playlistId}`;
   for (let i = 0; i < userAgents.length; i++) {
     try {
-      const res = await fetch(`${RSS_URL}&_=${Date.now()}`, {
+      const res = await fetch(`${url}&_=${Date.now()}`, {
         redirect: "follow",
         cache: "no-store",
         headers: { ...BROWSER_HEADERS, "User-Agent": userAgents[i] },
       });
+      if (res.status === 404) return EMPTY;
       if (!res.ok) {
-        console.warn(`youtube rss: attempt ${i + 1} HTTP ${res.status}`);
+        console.warn(`youtube rss ${playlistId}: attempt ${i + 1} HTTP ${res.status}`);
         continue;
       }
-      const videos = parseYouTubeRssXml(await res.text());
-      if (videos.length > 0) return videos;
-      console.warn(`youtube rss: attempt ${i + 1} parsed zero videos`);
+      return parseYouTubeRssXml(await res.text());
     } catch (err) {
-      console.warn(`youtube rss: attempt ${i + 1} error`, err?.message ?? err);
+      console.warn(`youtube rss ${playlistId}: attempt ${i + 1} error`, err?.message ?? err);
     }
   }
   return null;
 }
 
-async function fetchPlaylistItems(apiKey, playlistId) {
-  const url = new URL("https://www.googleapis.com/youtube/v3/playlistItems");
-  url.search = new URLSearchParams({
+/** All categories via RSS. Returns null if every feed failed. */
+export async function fetchFromRss() {
+  const results = await Promise.all(
+    CATEGORIES.map((c) => fetchPlaylistRss(CATEGORY_PLAYLISTS[c])),
+  );
+  if (results.every((r) => r === null)) return null;
+  return Object.fromEntries(
+    CATEGORIES.map((c, i) => [
+      c,
+      Array.isArray(results[i]) ? results[i].slice(0, MAX_PER_CATEGORY) : [],
+    ]),
+  );
+}
+
+/** One playlist via the Data API, newest first, with view counts. */
+async function fetchPlaylistFromDataApi(apiKey, playlistId) {
+  const listUrl = new URL("https://www.googleapis.com/youtube/v3/playlistItems");
+  listUrl.search = new URLSearchParams({
     part: "snippet,contentDetails",
     playlistId,
     maxResults: "50",
     key: apiKey,
   }).toString();
-  return fetch(url);
-}
-
-/**
- * YouTube Data API v3 — used when YOUTUBE_API_KEY is set; reliable from Vercel.
- * Reads the channel's "Videos" playlist (no live streams or Shorts), falling back to all
- * uploads, and drops anything YouTube reports as a live stream either way.
- */
-export async function fetchFromDataApi(apiKey, maxResults = 15) {
-  let listRes = await fetchPlaylistItems(apiKey, VIDEOS_PLAYLIST_ID);
-  if (listRes.status === 404) listRes = await fetchPlaylistItems(apiKey, UPLOADS_PLAYLIST_ID);
+  const listRes = await fetch(listUrl);
+  if (listRes.status === 404) return [];
   if (!listRes.ok) throw new Error(`youtube data api HTTP ${listRes.status}`);
-  const list = await listRes.json();
-  const items = (list.items || []).filter((it) => it.snippet?.title !== "Private video");
+  const items = ((await listRes.json()).items || []).filter(
+    (it) => it.snippet?.title !== "Private video" && it.snippet?.title !== "Deleted video",
+  );
   if (items.length === 0) return [];
 
+  const views = new Map();
   const statsUrl = new URL("https://www.googleapis.com/youtube/v3/videos");
   statsUrl.search = new URLSearchParams({
-    part: "statistics,liveStreamingDetails",
+    part: "statistics",
     id: items.map((it) => it.contentDetails.videoId).join(","),
     key: apiKey,
   }).toString();
   const statsRes = await fetch(statsUrl);
-  // Without this we can't tell streams apart, so let the caller fall back to RSS.
-  if (!statsRes.ok) throw new Error(`youtube data api videos HTTP ${statsRes.status}`);
-
-  const views = new Map();
-  const liveIds = new Set();
-  for (const v of (await statsRes.json()).items || []) {
-    views.set(v.id, Number(v.statistics?.viewCount) || 0);
-    // Present on past, current and scheduled live streams.
-    if (v.liveStreamingDetails) liveIds.add(v.id);
+  if (statsRes.ok) {
+    for (const v of (await statsRes.json()).items || []) {
+      views.set(v.id, Number(v.statistics?.viewCount) || 0);
+    }
   }
 
-  const videos = items
-    .filter((it) => !liveIds.has(it.contentDetails.videoId))
-    .map((it) => {
-      const s = it.snippet;
-      const videoId = it.contentDetails.videoId;
-      return {
-        videoId,
-        title: s.title,
-        published: it.contentDetails.videoPublishedAt || s.publishedAt,
-        thumbnail:
-          s.thumbnails?.high?.url ||
-          s.thumbnails?.medium?.url ||
-          `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
-        description: s.description || "",
-        views: views.get(videoId) ?? 0,
-      };
-    });
-  return normalizeVideos(videos).slice(0, maxResults);
+  const videos = items.map((it) => {
+    const s = it.snippet;
+    const videoId = it.contentDetails.videoId;
+    return {
+      videoId,
+      title: s.title,
+      published: it.contentDetails.videoPublishedAt || s.publishedAt,
+      thumbnail:
+        s.thumbnails?.high?.url ||
+        s.thumbnails?.medium?.url ||
+        `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+      description: s.description || "",
+      views: views.get(videoId) ?? 0,
+    };
+  });
+  return normalizeVideos(videos).slice(0, MAX_PER_CATEGORY);
 }
 
-/** Tries the Data API (if configured), then RSS. Returns null when both fail. */
-export async function fetchLatestVideos() {
+/** YouTube Data API v3 — used when YOUTUBE_API_KEY is set; reliable from Vercel. */
+export async function fetchFromDataApi(apiKey) {
+  const lists = await Promise.all(
+    CATEGORIES.map((c) => fetchPlaylistFromDataApi(apiKey, CATEGORY_PLAYLISTS[c])),
+  );
+  return Object.fromEntries(CATEGORIES.map((c, i) => [c, lists[i]]));
+}
+
+const hasAny = (feed) => CATEGORIES.some((c) => feed[c].length > 0);
+
+/**
+ * Latest uploads split into { videos, shorts, live }. Tries the Data API (if configured),
+ * then RSS. Returns null when both fail.
+ */
+export async function fetchLatestFeed() {
   const apiKey = process.env.YOUTUBE_API_KEY;
   if (apiKey) {
     try {
-      const videos = await fetchFromDataApi(apiKey);
-      if (videos.length > 0) return videos;
+      const feed = await fetchFromDataApi(apiKey);
+      if (hasAny(feed)) return feed;
     } catch (err) {
       console.warn("youtube data api failed, falling back to rss", err?.message ?? err);
     }
   }
-  return fetchFromRss();
+  const feed = await fetchFromRss();
+  return feed && hasAny(feed) ? feed : null;
 }

@@ -9,33 +9,37 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { CHANNEL_ID, fetchLatestVideos } from "../api/_lib/youtube.js";
+import { CATEGORIES, CHANNEL_ID, fetchLatestFeed } from "../api/_lib/youtube.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const outDir = join(__dirname, "..", "public");
 const outFile = join(outDir, "youtube-videos.json");
 
-function writePayload(videos, warning) {
+function writePayload(feed, warning) {
   mkdirSync(outDir, { recursive: true });
   const payload = {
     channelId: CHANNEL_ID,
     fetchedAt: new Date().toISOString(),
-    videos,
+    ...feed,
     ...(warning ? { _warning: warning } : {}),
   };
   writeFileSync(outFile, JSON.stringify(payload, null, 2), "utf8");
 }
 
-const videos = await fetchLatestVideos();
+const feed = await fetchLatestFeed();
 
-if (videos && videos.length > 0) {
-  writePayload(videos);
-  console.log(`fetch-youtube-feed: wrote ${videos.length} videos -> ${outFile}`);
+if (feed) {
+  writePayload(feed);
+  const counts = CATEGORIES.map((c) => `${feed[c].length} ${c}`).join(", ");
+  console.log(`fetch-youtube-feed: wrote ${counts} -> ${outFile}`);
   process.exit(0);
 }
 
 console.warn(
   "fetch-youtube-feed: feed unreachable from this network (common on cloud build VMs). Build continues; the site loads /api/feeds/youtube at runtime.",
 );
-writePayload([], "feed_unavailable_at_build — runtime uses /api/feeds/youtube");
+writePayload(
+  Object.fromEntries(CATEGORIES.map((c) => [c, []])),
+  "feed_unavailable_at_build — runtime uses /api/feeds/youtube",
+);
 process.exit(0);

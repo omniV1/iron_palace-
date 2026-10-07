@@ -2,10 +2,10 @@
  * Public read-only feeds, combined into one function to stay under
  * Vercel's serverless function limit:
  *   GET /api/feeds/shop     — Shopify products
- *   GET /api/feeds/youtube  — latest channel uploads
+ *   GET /api/feeds/youtube  — latest uploads as { videos, shorts, live }
  */
 import { SHOP_URL, fetchShopProducts } from "../_lib/shop.js";
-import { CHANNEL_ID, fetchLatestVideos } from "../_lib/youtube.js";
+import { CHANNEL_ID, fetchLatestFeed } from "../_lib/youtube.js";
 import { sendError } from "../_lib/respond.js";
 
 async function shop(res) {
@@ -15,8 +15,8 @@ async function shop(res) {
 }
 
 async function youtube(res) {
-  const videos = await fetchLatestVideos();
-  if (!videos) {
+  const feed = await fetchLatestFeed();
+  if (!feed) {
     res.setHeader("Cache-Control", "no-store");
     return res.status(502).json({ error: "youtube feed unavailable" });
   }
@@ -27,7 +27,7 @@ async function youtube(res) {
   return res.status(200).json({
     channelId: CHANNEL_ID,
     fetchedAt: new Date().toISOString(),
-    videos,
+    ...feed,
   });
 }
 

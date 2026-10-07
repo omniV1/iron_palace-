@@ -9,43 +9,59 @@ export interface YouTubeVideo {
   views: number;
 }
 
-const CACHE_KEY = "ipp_yt_videos";
+export type VideoCategory = "videos" | "shorts" | "live";
+export const VIDEO_CATEGORIES: VideoCategory[] = ["videos", "shorts", "live"];
+
+export type YouTubeFeed = Record<VideoCategory, YouTubeVideo[]>;
+
+const EMPTY_FEED: YouTubeFeed = { videos: [], shorts: [], live: [] };
+
+const CACHE_KEY = "ipp_yt_feed_v2";
 const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 
 /** Live feed first; the build-time snapshot only if the API is down. */
 const FEED_URLS = ["/api/feeds/youtube", `${import.meta.env.BASE_URL}youtube-videos.json`];
 
-function sortNewestFirst(videos: YouTubeVideo[]): YouTubeVideo[] {
+function sortNewestFirst(videos: YouTubeVideo[] = []): YouTubeVideo[] {
   return [...videos].sort(
     (a, b) => new Date(b.published).getTime() - new Date(a.published).getTime(),
   );
 }
 
+function toFeed(data: FeedResponse, maxResults: number): YouTubeFeed {
+  return {
+    videos: sortNewestFirst(data.videos).slice(0, maxResults),
+    shorts: sortNewestFirst(data.shorts).slice(0, maxResults),
+    live: sortNewestFirst(data.live).slice(0, maxResults),
+  };
+}
+
+const hasAny = (feed: YouTubeFeed) => VIDEO_CATEGORIES.some((c) => feed[c].length > 0);
+
 interface CacheEntry {
-  videos: YouTubeVideo[];
+  feed: YouTubeFeed;
   timestamp: number;
 }
 
 /** Shape of /api/feeds/youtube and the build-time fallback youtube-videos.json */
-interface FeedResponse {
+interface FeedResponse extends Partial<YouTubeFeed> {
   channelId: string;
   fetchedAt: string;
-  videos: YouTubeVideo[];
 }
 
-function readCache(): YouTubeVideo[] | null {
+function readCache(): YouTubeFeed | null {
   try {
     const raw = localStorage.getItem(CACHE_KEY);
     if (!raw) return null;
     const entry: CacheEntry = JSON.parse(raw);
-    if (Date.now() - entry.timestamp < CACHE_TTL) return entry.videos;
+    if (entry.feed && Date.now() - entry.timestamp < CACHE_TTL) return entry.feed;
   } catch { /* corrupt cache */ }
   return null;
 }
 
-function writeCache(videos: YouTubeVideo[]) {
+function writeCache(feed: YouTubeFeed) {
   try {
-    const entry: CacheEntry = { videos, timestamp: Date.now() };
+    const entry: CacheEntry = { feed, timestamp: Date.now() };
     localStorage.setItem(CACHE_KEY, JSON.stringify(entry));
   } catch { /* storage full */ }
 }
@@ -72,33 +88,26 @@ export function timeAgo(dateStr: string): string {
 }
 
 export function useYouTubeVideos(maxResults = 15) {
-  const [videos, setVideos] = useState<YouTubeVideo[]>(() => {
-    const cached = readCache();
-    return cached ? cached.slice(0, maxResults) : [];
-  });
+  const [feed, setFeed] = useState<YouTubeFeed>(() => readCache() ?? EMPTY_FEED);
   const [loading, setLoading] = useState(() => readCache() === null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
-    async function fetchVideos() {
-      const applyVideos = (parsed: YouTubeVideo[]) => {
-        writeCache(parsed);
-        if (!cancelled) {
-          setVideos(parsed.slice(0, maxResults));
-          setError(null);
-          setLoading(false);
-        }
-      };
-
+    async function fetchFeed() {
       for (const url of FEED_URLS) {
         try {
           const res = await fetch(url, { cache: "no-cache" });
           if (!res.ok) continue;
-          const data = (await res.json()) as FeedResponse;
-          if (Array.isArray(data.videos) && data.videos.length > 0) {
-            applyVideos(sortNewestFirst(data.videos));
+          const parsed = toFeed((await res.json()) as FeedResponse, maxResults);
+          if (hasAny(parsed)) {
+            writeCache(parsed);
+            if (!cancelled) {
+              setFeed(parsed);
+              setError(null);
+              setLoading(false);
+            }
             return;
           }
         } catch {
@@ -118,9 +127,9 @@ export function useYouTubeVideos(maxResults = 15) {
       }
     }
 
-    fetchVideos();
+    fetchFeed();
     return () => { cancelled = true; };
   }, [maxResults]);
 
-  return { videos, loading, error };
+  return { ...feed, loading, error };
 }
