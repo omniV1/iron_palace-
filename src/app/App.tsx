@@ -418,7 +418,7 @@ export default function App() {
 
             return (
               <>
-                <div role="tablist" aria-label="Episode type" className="flex flex-wrap justify-center gap-2 mb-8">
+                <div role="tablist" aria-label="Episode type" className="grid grid-cols-3 gap-3 sm:gap-5 w-full max-w-lg mx-auto mb-10">
                   {tabs.map((tab) => (
                     <button
                       key={tab.id}
@@ -426,7 +426,7 @@ export default function App() {
                       role="tab"
                       aria-selected={tab.id === active.id}
                       onClick={() => setVideoTab(tab.id)}
-                      className={`rounded-full px-5 py-2 text-xs sm:text-sm uppercase tracking-wider font-display transition-colors duration-200 border ${
+                      className={`w-full rounded-full px-2 sm:px-5 py-2.5 text-center text-[11px] sm:text-sm uppercase tracking-wide sm:tracking-wider font-display transition-colors duration-200 border ${
                         tab.id === active.id
                           ? "bg-crimson border-crimson text-primary-foreground"
                           : "border-white/15 text-zinc-300 hover:border-crimson/50 hover:text-crimson-bright"
