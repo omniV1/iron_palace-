@@ -5,7 +5,9 @@
 
 export const CHANNEL_ID = "UC9tV0Z2xN1HtvQu5F-ERqpg";
 export const UPLOADS_PLAYLIST_ID = `UU${CHANNEL_ID.slice(2)}`;
-const RSS_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`;
+/** YouTube's auto-generated "Videos" tab playlist: regular uploads only, no live streams or Shorts. */
+export const VIDEOS_PLAYLIST_ID = `UULF${CHANNEL_ID.slice(2)}`;
+const RSS_URL = `https://www.youtube.com/feeds/videos.xml?playlist_id=${VIDEOS_PLAYLIST_ID}`;
 
 /** Browser-like headers — plain "bot" User-Agents often get 403/404 from YouTube on cloud IPs. */
 const BROWSER_HEADERS = {
@@ -104,39 +106,51 @@ export async function fetchFromRss() {
   return null;
 }
 
-/** YouTube Data API v3 — used when YOUTUBE_API_KEY is set; reliable from Vercel. */
-export async function fetchFromDataApi(apiKey, maxResults = 15) {
-  const listUrl = new URL("https://www.googleapis.com/youtube/v3/playlistItems");
-  listUrl.search = new URLSearchParams({
+async function fetchPlaylistItems(apiKey, playlistId) {
+  const url = new URL("https://www.googleapis.com/youtube/v3/playlistItems");
+  url.search = new URLSearchParams({
     part: "snippet,contentDetails",
-    playlistId: UPLOADS_PLAYLIST_ID,
-    maxResults: String(maxResults),
+    playlistId,
+    maxResults: "50",
     key: apiKey,
   }).toString();
-  const listRes = await fetch(listUrl);
+  return fetch(url);
+}
+
+/**
+ * YouTube Data API v3 — used when YOUTUBE_API_KEY is set; reliable from Vercel.
+ * Reads the channel's "Videos" playlist (no live streams or Shorts), falling back to all
+ * uploads, and drops anything YouTube reports as a live stream either way.
+ */
+export async function fetchFromDataApi(apiKey, maxResults = 15) {
+  let listRes = await fetchPlaylistItems(apiKey, VIDEOS_PLAYLIST_ID);
+  if (listRes.status === 404) listRes = await fetchPlaylistItems(apiKey, UPLOADS_PLAYLIST_ID);
   if (!listRes.ok) throw new Error(`youtube data api HTTP ${listRes.status}`);
   const list = await listRes.json();
   const items = (list.items || []).filter((it) => it.snippet?.title !== "Private video");
+  if (items.length === 0) return [];
 
-  const ids = items.map((it) => it.contentDetails.videoId);
+  const statsUrl = new URL("https://www.googleapis.com/youtube/v3/videos");
+  statsUrl.search = new URLSearchParams({
+    part: "statistics,liveStreamingDetails",
+    id: items.map((it) => it.contentDetails.videoId).join(","),
+    key: apiKey,
+  }).toString();
+  const statsRes = await fetch(statsUrl);
+  // Without this we can't tell streams apart, so let the caller fall back to RSS.
+  if (!statsRes.ok) throw new Error(`youtube data api videos HTTP ${statsRes.status}`);
+
   const views = new Map();
-  if (ids.length) {
-    const statsUrl = new URL("https://www.googleapis.com/youtube/v3/videos");
-    statsUrl.search = new URLSearchParams({
-      part: "statistics",
-      id: ids.join(","),
-      key: apiKey,
-    }).toString();
-    const statsRes = await fetch(statsUrl);
-    if (statsRes.ok) {
-      for (const v of (await statsRes.json()).items || []) {
-        views.set(v.id, Number(v.statistics?.viewCount) || 0);
-      }
-    }
+  const liveIds = new Set();
+  for (const v of (await statsRes.json()).items || []) {
+    views.set(v.id, Number(v.statistics?.viewCount) || 0);
+    // Present on past, current and scheduled live streams.
+    if (v.liveStreamingDetails) liveIds.add(v.id);
   }
 
-  return normalizeVideos(
-    items.map((it) => {
+  const videos = items
+    .filter((it) => !liveIds.has(it.contentDetails.videoId))
+    .map((it) => {
       const s = it.snippet;
       const videoId = it.contentDetails.videoId;
       return {
@@ -150,8 +164,8 @@ export async function fetchFromDataApi(apiKey, maxResults = 15) {
         description: s.description || "",
         views: views.get(videoId) ?? 0,
       };
-    }),
-  );
+    });
+  return normalizeVideos(videos).slice(0, maxResults);
 }
 
 /** Tries the Data API (if configured), then RSS. Returns null when both fail. */
