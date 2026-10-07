@@ -374,7 +374,7 @@ export default function App() {
                     src={
                       videos[0]
                         ? `https://www.youtube.com/embed/${videos[0].videoId}?playsinline=1`
-                        : "https://www.youtube.com/embed/videoseries?list=UULF9tV0Z2xN1HtvQu5F-ERqpg&playsinline=1"
+                        : "https://www.youtube.com/embed/videoseries?list=UU9tV0Z2xN1HtvQu5F-ERqpg&playsinline=1"
                     }
                     title="Latest YouTube Video"
                     frameBorder="0"

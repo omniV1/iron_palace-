@@ -4,18 +4,20 @@
  */
 
 export const CHANNEL_ID = "UC9tV0Z2xN1HtvQu5F-ERqpg";
-/**
- * YouTube's auto-generated per-channel playlists, matching the channel's tabs:
- * UULF = Videos, UUSH = Shorts, UULV = Live. They 404 when the channel has none of that kind.
- */
 const CHANNEL_SUFFIX = CHANNEL_ID.slice(2);
-export const CATEGORY_PLAYLISTS = {
-  videos: `UULF${CHANNEL_SUFFIX}`,
-  shorts: `UUSH${CHANNEL_SUFFIX}`,
-  live: `UULV${CHANNEL_SUFFIX}`,
-};
-export const CATEGORIES = Object.keys(CATEGORY_PLAYLISTS);
+/** Every upload: regular videos, Shorts and live streams together. */
+const UPLOADS_PLAYLIST_ID = `UU${CHANNEL_SUFFIX}`;
+/**
+ * YouTube's auto-generated per-tab playlists (UUSH = Shorts, UULV = Live). Not every
+ * channel serves them, so they are only used as hints when classifying uploads.
+ */
+const SHORTS_PLAYLIST_ID = `UUSH${CHANNEL_SUFFIX}`;
+const LIVE_PLAYLIST_ID = `UULV${CHANNEL_SUFFIX}`;
+
+export const CATEGORIES = ["videos", "shorts", "live"];
 const MAX_PER_CATEGORY = 15;
+/** YouTube allows Shorts up to 3 minutes; used only when the Shorts playlist is unavailable. */
+const SHORTS_MAX_SECONDS = 180;
 
 /** Browser-like headers — plain "bot" User-Agents often get 403/404 from YouTube on cloud IPs. */
 const BROWSER_HEADERS = {
@@ -72,6 +74,8 @@ export function parseYouTubeRssXml(xml) {
     const description =
       entry.match(/<media:description>([\s\S]*?)<\/media:description>/i)?.[1]?.trim() ?? "";
 
+    const isShortLink = /<link[^>]*href="[^"]*\/shorts\//i.test(entry);
+
     const viewsMatch = entry.match(/views="(\d+)"/i);
     const views = viewsMatch ? parseInt(viewsMatch[1], 10) : 0;
 
@@ -82,21 +86,30 @@ export function parseYouTubeRssXml(xml) {
       thumbnail: thumbUrl,
       description: decodeEntities(description),
       views: Number.isFinite(views) ? views : 0,
+      isShortLink,
     });
   }
   return normalizeVideos(videos);
 }
 
-/** Marks a playlist that doesn't exist (the channel has nothing of that kind). */
-const EMPTY = Symbol("empty");
+const strip = ({ isShortLink, ...video }) => video;
 
-/** One playlist's RSS feed (no key needed, but YouTube sometimes blocks cloud IPs). */
-async function fetchPlaylistRss(playlistId) {
+/** Splits uploads into the three tabs, newest first. */
+function categorize(uploads, isLive, isShort) {
+  const feed = { videos: [], shorts: [], live: [] };
+  for (const video of normalizeVideos(uploads)) {
+    const category = isLive(video) ? "live" : isShort(video) ? "shorts" : "videos";
+    if (feed[category].length < MAX_PER_CATEGORY) feed[category].push(strip(video));
+  }
+  return feed;
+}
+
+async function fetchRss(query) {
   const userAgents = [
     BROWSER_HEADERS["User-Agent"],
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
   ];
-  const url = `https://www.youtube.com/feeds/videos.xml?playlist_id=${playlistId}`;
+  const url = `https://www.youtube.com/feeds/videos.xml?${query}`;
   for (let i = 0; i < userAgents.length; i++) {
     try {
       const res = await fetch(`${url}&_=${Date.now()}`, {
@@ -104,65 +117,102 @@ async function fetchPlaylistRss(playlistId) {
         cache: "no-store",
         headers: { ...BROWSER_HEADERS, "User-Agent": userAgents[i] },
       });
-      if (res.status === 404) return EMPTY;
+      if (res.status === 404) return [];
       if (!res.ok) {
-        console.warn(`youtube rss ${playlistId}: attempt ${i + 1} HTTP ${res.status}`);
+        console.warn(`youtube rss ${query}: attempt ${i + 1} HTTP ${res.status}`);
         continue;
       }
       return parseYouTubeRssXml(await res.text());
     } catch (err) {
-      console.warn(`youtube rss ${playlistId}: attempt ${i + 1} error`, err?.message ?? err);
+      console.warn(`youtube rss ${query}: attempt ${i + 1} error`, err?.message ?? err);
     }
   }
   return null;
 }
 
-/** All categories via RSS. Returns null if every feed failed. */
+/**
+ * RSS fallback (no key needed, but YouTube sometimes blocks cloud IPs). The channel feed
+ * links Shorts as /shorts/ URLs; live streams are recognised via the Live playlist feed.
+ */
 export async function fetchFromRss() {
-  const results = await Promise.all(
-    CATEGORIES.map((c) => fetchPlaylistRss(CATEGORY_PLAYLISTS[c])),
-  );
-  if (results.every((r) => r === null)) return null;
-  return Object.fromEntries(
-    CATEGORIES.map((c, i) => [
-      c,
-      Array.isArray(results[i]) ? results[i].slice(0, MAX_PER_CATEGORY) : [],
-    ]),
+  const [uploads, live, shorts] = await Promise.all([
+    fetchRss(`channel_id=${CHANNEL_ID}`),
+    fetchRss(`playlist_id=${LIVE_PLAYLIST_ID}`),
+    fetchRss(`playlist_id=${SHORTS_PLAYLIST_ID}`),
+  ]);
+  if (!uploads) return null;
+  const liveIds = new Set((live || []).map((v) => v.videoId));
+  const shortIds = new Set((shorts || []).map((v) => v.videoId));
+  return categorize(
+    uploads,
+    (v) => liveIds.has(v.videoId),
+    (v) => v.isShortLink || shortIds.has(v.videoId),
   );
 }
 
-/** One playlist via the Data API, newest first, with view counts. */
-async function fetchPlaylistFromDataApi(apiKey, playlistId) {
-  const listUrl = new URL("https://www.googleapis.com/youtube/v3/playlistItems");
-  listUrl.search = new URLSearchParams({
-    part: "snippet,contentDetails",
-    playlistId,
-    maxResults: "50",
-    key: apiKey,
-  }).toString();
-  const listRes = await fetch(listUrl);
-  if (listRes.status === 404) return [];
+function dataApiUrl(path, params) {
+  const url = new URL(`https://www.googleapis.com/youtube/v3/${path}`);
+  url.search = new URLSearchParams(params).toString();
+  return url;
+}
+
+/** Video ids in a playlist, or null if YouTube won't serve it. */
+async function fetchPlaylistIds(apiKey, playlistId) {
+  try {
+    const res = await fetch(
+      dataApiUrl("playlistItems", { part: "contentDetails", playlistId, maxResults: "50", key: apiKey }),
+    );
+    if (!res.ok) return null;
+    return new Set(((await res.json()).items || []).map((it) => it.contentDetails.videoId));
+  } catch {
+    return null;
+  }
+}
+
+/** ISO 8601 duration (e.g. PT1M5S) to seconds. */
+function durationSeconds(iso = "") {
+  const m = iso.match(/P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!m) return 0;
+  const [, d = 0, h = 0, min = 0, sec = 0] = m.map((n) => Number(n) || 0);
+  return d * 86400 + h * 3600 + min * 60 + sec;
+}
+
+/**
+ * YouTube Data API v3 — used when YOUTUBE_API_KEY is set; reliable from Vercel.
+ * Reads the latest 50 uploads and sorts each into a tab: anything with live-stream
+ * details is a livestream; Shorts are anything a minute or shorter, plus whatever the
+ * Shorts playlist lists when YouTube serves it (otherwise anything 3 minutes or shorter).
+ */
+export async function fetchFromDataApi(apiKey) {
+  const [listRes, shortIds] = await Promise.all([
+    fetch(
+      dataApiUrl("playlistItems", {
+        part: "snippet,contentDetails",
+        playlistId: UPLOADS_PLAYLIST_ID,
+        maxResults: "50",
+        key: apiKey,
+      }),
+    ),
+    fetchPlaylistIds(apiKey, SHORTS_PLAYLIST_ID),
+  ]);
   if (!listRes.ok) throw new Error(`youtube data api HTTP ${listRes.status}`);
   const items = ((await listRes.json()).items || []).filter(
     (it) => it.snippet?.title !== "Private video" && it.snippet?.title !== "Deleted video",
   );
-  if (items.length === 0) return [];
+  if (items.length === 0) return categorize([], () => false, () => false);
 
-  const views = new Map();
-  const statsUrl = new URL("https://www.googleapis.com/youtube/v3/videos");
-  statsUrl.search = new URLSearchParams({
-    part: "statistics",
-    id: items.map((it) => it.contentDetails.videoId).join(","),
-    key: apiKey,
-  }).toString();
-  const statsRes = await fetch(statsUrl);
-  if (statsRes.ok) {
-    for (const v of (await statsRes.json()).items || []) {
-      views.set(v.id, Number(v.statistics?.viewCount) || 0);
-    }
-  }
+  const detailsRes = await fetch(
+    dataApiUrl("videos", {
+      part: "statistics,contentDetails,liveStreamingDetails",
+      id: items.map((it) => it.contentDetails.videoId).join(","),
+      key: apiKey,
+    }),
+  );
+  // Without details we can't tell streams apart, so let the caller fall back to RSS.
+  if (!detailsRes.ok) throw new Error(`youtube data api videos HTTP ${detailsRes.status}`);
+  const details = new Map(((await detailsRes.json()).items || []).map((v) => [v.id, v]));
 
-  const videos = items.map((it) => {
+  const uploads = items.map((it) => {
     const s = it.snippet;
     const videoId = it.contentDetails.videoId;
     return {
@@ -174,18 +224,21 @@ async function fetchPlaylistFromDataApi(apiKey, playlistId) {
         s.thumbnails?.medium?.url ||
         `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
       description: s.description || "",
-      views: views.get(videoId) ?? 0,
+      views: Number(details.get(videoId)?.statistics?.viewCount) || 0,
     };
   });
-  return normalizeVideos(videos).slice(0, MAX_PER_CATEGORY);
-}
 
-/** YouTube Data API v3 — used when YOUTUBE_API_KEY is set; reliable from Vercel. */
-export async function fetchFromDataApi(apiKey) {
-  const lists = await Promise.all(
-    CATEGORIES.map((c) => fetchPlaylistFromDataApi(apiKey, CATEGORY_PLAYLISTS[c])),
+  const useShortsPlaylist = shortIds !== null && shortIds.size > 0;
+  return categorize(
+    uploads,
+    (v) => Boolean(details.get(v.videoId)?.liveStreamingDetails),
+    (v) => {
+      const secs = durationSeconds(details.get(v.videoId)?.contentDetails?.duration);
+      if (secs > 0 && secs <= 60) return true;
+      if (useShortsPlaylist) return shortIds.has(v.videoId);
+      return secs > 0 && secs <= SHORTS_MAX_SECONDS;
+    },
   );
-  return Object.fromEntries(CATEGORIES.map((c, i) => [c, lists[i]]));
 }
 
 const hasAny = (feed) => CATEGORIES.some((c) => feed[c].length > 0);
