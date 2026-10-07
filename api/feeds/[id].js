@@ -14,21 +14,30 @@ async function shop(res) {
   return res.status(200).json({ products, shopUrl: SHOP_URL });
 }
 
+/** Last good feed on this warm instance, served if YouTube has a hiccup. */
+let lastGoodFeed = null;
+
 async function youtube(res) {
-  const feed = await fetchLatestFeed();
-  if (!feed) {
+  const { feed, notes } = await fetchLatestFeed();
+  if (feed) {
+    lastGoodFeed = { channelId: CHANNEL_ID, fetchedAt: new Date().toISOString(), ...feed };
+  } else {
+    console.warn("[api/feeds/youtube]", notes.join(" | "));
+  }
+
+  if (!lastGoodFeed) {
     res.setHeader("Cache-Control", "no-store");
-    return res.status(502).json({ error: "youtube feed unavailable" });
+    return res.status(502).json({ error: "youtube feed unavailable", details: notes });
   }
 
   // CDN keeps it for 10 minutes and serves the last good copy while refreshing,
-  // so new uploads show up within minutes without hammering YouTube.
-  res.setHeader("Cache-Control", "s-maxage=600, stale-while-revalidate=86400");
-  return res.status(200).json({
-    channelId: CHANNEL_ID,
-    fetchedAt: new Date().toISOString(),
-    ...feed,
-  });
+  // so new uploads show up within minutes without hammering YouTube. A stale copy
+  // is only cached briefly so the next request retries YouTube.
+  res.setHeader(
+    "Cache-Control",
+    feed ? "s-maxage=600, stale-while-revalidate=86400" : "s-maxage=60",
+  );
+  return res.status(200).json(feed ? lastGoodFeed : { ...lastGoodFeed, stale: true, details: notes });
 }
 
 const feeds = { shop, youtube };

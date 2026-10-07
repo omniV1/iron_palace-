@@ -13,6 +13,7 @@ const UPLOADS_PLAYLIST_ID = `UU${CHANNEL_SUFFIX}`;
  */
 const SHORTS_PLAYLIST_ID = `UUSH${CHANNEL_SUFFIX}`;
 const LIVE_PLAYLIST_ID = `UULV${CHANNEL_SUFFIX}`;
+const VIDEOS_PLAYLIST_ID = `UULF${CHANNEL_SUFFIX}`;
 
 export const CATEGORIES = ["videos", "shorts", "live"];
 const MAX_PER_CATEGORY = 15;
@@ -104,12 +105,14 @@ function categorize(uploads, isLive, isShort) {
   return feed;
 }
 
-async function fetchRss(query) {
+/** Parsed feed, [] when YouTube says it doesn't exist (404), or null on failure. */
+async function fetchRss(query, notes) {
   const userAgents = [
     BROWSER_HEADERS["User-Agent"],
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
   ];
   const url = `https://www.youtube.com/feeds/videos.xml?${query}`;
+  let lastNote = "";
   for (let i = 0; i < userAgents.length; i++) {
     try {
       const res = await fetch(`${url}&_=${Date.now()}`, {
@@ -117,32 +120,46 @@ async function fetchRss(query) {
         cache: "no-store",
         headers: { ...BROWSER_HEADERS, "User-Agent": userAgents[i] },
       });
-      if (res.status === 404) return [];
+      if (res.status === 404) {
+        notes.push(`rss ${query}: 404`);
+        return [];
+      }
       if (!res.ok) {
-        console.warn(`youtube rss ${query}: attempt ${i + 1} HTTP ${res.status}`);
+        lastNote = `HTTP ${res.status}`;
         continue;
       }
       return parseYouTubeRssXml(await res.text());
     } catch (err) {
-      console.warn(`youtube rss ${query}: attempt ${i + 1} error`, err?.message ?? err);
+      lastNote = String(err?.message ?? err);
     }
   }
+  notes.push(`rss ${query}: ${lastNote}`);
   return null;
 }
 
 /**
- * RSS fallback (no key needed, but YouTube sometimes blocks cloud IPs). The channel feed
- * links Shorts as /shorts/ URLs; live streams are recognised via the Live playlist feed.
+ * RSS fallback (no key needed, but YouTube sometimes blocks or errors for cloud IPs).
+ * Uploads come from the channel feed, or the uploads playlist feed if that fails; Shorts
+ * are linked as /shorts/ URLs, and live streams are recognised via the Live playlist feed.
+ * If neither uploads feed works, whatever per-tab playlist feeds do work are used as-is.
  */
-export async function fetchFromRss() {
-  const [uploads, live, shorts] = await Promise.all([
-    fetchRss(`channel_id=${CHANNEL_ID}`),
-    fetchRss(`playlist_id=${LIVE_PLAYLIST_ID}`),
-    fetchRss(`playlist_id=${SHORTS_PLAYLIST_ID}`),
+export async function fetchFromRss(notes = []) {
+  const [channel, live, shorts] = await Promise.all([
+    fetchRss(`channel_id=${CHANNEL_ID}`, notes),
+    fetchRss(`playlist_id=${LIVE_PLAYLIST_ID}`, notes),
+    fetchRss(`playlist_id=${SHORTS_PLAYLIST_ID}`, notes),
   ]);
-  if (!uploads) return null;
+  let uploads = channel?.length ? channel : await fetchRss(`playlist_id=${UPLOADS_PLAYLIST_ID}`, notes);
+
   const liveIds = new Set((live || []).map((v) => v.videoId));
   const shortIds = new Set((shorts || []).map((v) => v.videoId));
+
+  if (!uploads?.length) {
+    const videos = await fetchRss(`playlist_id=${VIDEOS_PLAYLIST_ID}`, notes);
+    uploads = [...(videos || []), ...(live || []), ...(shorts || [])];
+  }
+  if (!uploads.length) return null;
+
   return categorize(
     uploads,
     (v) => liveIds.has(v.videoId),
@@ -154,6 +171,16 @@ function dataApiUrl(path, params) {
   const url = new URL(`https://www.googleapis.com/youtube/v3/${path}`);
   url.search = new URLSearchParams(params).toString();
   return url;
+}
+
+/** Google's error reason (e.g. "API key not valid"), never the key itself. */
+async function googleError(res) {
+  try {
+    const message = (await res.json())?.error?.message;
+    return message ? ` (${message})` : "";
+  } catch {
+    return "";
+  }
 }
 
 /** Video ids in a playlist, or null if YouTube won't serve it. */
@@ -195,7 +222,7 @@ export async function fetchFromDataApi(apiKey) {
     ),
     fetchPlaylistIds(apiKey, SHORTS_PLAYLIST_ID),
   ]);
-  if (!listRes.ok) throw new Error(`youtube data api HTTP ${listRes.status}`);
+  if (!listRes.ok) throw new Error(`uploads HTTP ${listRes.status}${await googleError(listRes)}`);
   const items = ((await listRes.json()).items || []).filter(
     (it) => it.snippet?.title !== "Private video" && it.snippet?.title !== "Deleted video",
   );
@@ -209,7 +236,9 @@ export async function fetchFromDataApi(apiKey) {
     }),
   );
   // Without details we can't tell streams apart, so let the caller fall back to RSS.
-  if (!detailsRes.ok) throw new Error(`youtube data api videos HTTP ${detailsRes.status}`);
+  if (!detailsRes.ok) {
+    throw new Error(`videos HTTP ${detailsRes.status}${await googleError(detailsRes)}`);
+  }
   const details = new Map(((await detailsRes.json()).items || []).map((v) => [v.id, v]));
 
   const uploads = items.map((it) => {
@@ -245,18 +274,22 @@ const hasAny = (feed) => CATEGORIES.some((c) => feed[c].length > 0);
 
 /**
  * Latest uploads split into { videos, shorts, live }. Tries the Data API (if configured),
- * then RSS. Returns null when both fail.
+ * then RSS. Returns { feed: null, notes } when both fail; notes say why, for debugging.
  */
 export async function fetchLatestFeed() {
+  const notes = [];
   const apiKey = process.env.YOUTUBE_API_KEY;
-  if (apiKey) {
+  if (!apiKey) {
+    notes.push("data api: YOUTUBE_API_KEY is not set for this deployment");
+  } else {
     try {
       const feed = await fetchFromDataApi(apiKey);
-      if (hasAny(feed)) return feed;
+      if (hasAny(feed)) return { feed, notes };
+      notes.push("data api: no uploads returned");
     } catch (err) {
-      console.warn("youtube data api failed, falling back to rss", err?.message ?? err);
+      notes.push(`data api: ${err?.message ?? err}`);
     }
   }
-  const feed = await fetchFromRss();
-  return feed && hasAny(feed) ? feed : null;
+  const feed = await fetchFromRss(notes);
+  return { feed: feed && hasAny(feed) ? feed : null, notes };
 }

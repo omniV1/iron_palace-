@@ -26,7 +26,7 @@ function writePayload(feed, warning) {
   writeFileSync(outFile, JSON.stringify(payload, null, 2), "utf8");
 }
 
-const feed = await fetchLatestFeed();
+const { feed, notes } = await fetchLatestFeed();
 
 if (feed) {
   writePayload(feed);
@@ -35,6 +35,7 @@ if (feed) {
   process.exit(0);
 }
 
+console.warn(`fetch-youtube-feed: ${notes.join(" | ")}`);
 console.warn(
   "fetch-youtube-feed: feed unreachable from this network (common on cloud build VMs). Build continues; the site loads /api/feeds/youtube at runtime.",
 );
