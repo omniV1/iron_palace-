@@ -12,13 +12,22 @@ export interface YouTubeVideo {
 const CACHE_KEY = "ipp_yt_videos";
 const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 
+/** Live feed first; the build-time snapshot only if the API is down. */
+const FEED_URLS = ["/api/youtube", `${import.meta.env.BASE_URL}youtube-videos.json`];
+
+function sortNewestFirst(videos: YouTubeVideo[]): YouTubeVideo[] {
+  return [...videos].sort(
+    (a, b) => new Date(b.published).getTime() - new Date(a.published).getTime(),
+  );
+}
+
 interface CacheEntry {
   videos: YouTubeVideo[];
   timestamp: number;
 }
 
-/** Written by scripts/fetch-youtube-feed.mjs at build time */
-interface StaticFeedFile {
+/** Shape of /api/youtube and the build-time fallback youtube-videos.json */
+interface FeedResponse {
   channelId: string;
   fetchedAt: string;
   videos: YouTubeVideo[];
@@ -83,18 +92,24 @@ export function useYouTubeVideos(maxResults = 15) {
         }
       };
 
-      try {
-        const jsonUrl = `${import.meta.env.BASE_URL}youtube-videos.json`;
-        const res = await fetch(jsonUrl);
-        if (res.ok) {
-          const data = (await res.json()) as StaticFeedFile;
+      for (const url of FEED_URLS) {
+        try {
+          const res = await fetch(url, { cache: "no-cache" });
+          if (!res.ok) continue;
+          const data = (await res.json()) as FeedResponse;
           if (Array.isArray(data.videos) && data.videos.length > 0) {
-            applyVideos(data.videos);
+            applyVideos(sortNewestFirst(data.videos));
             return;
           }
+        } catch {
+          /* try next source */
         }
-      } catch {
-        /* fall through */
+      }
+
+      // Keep showing cached videos if we have them rather than an error.
+      if (readCache() !== null) {
+        if (!cancelled) setLoading(false);
+        return;
       }
 
       if (!cancelled) {

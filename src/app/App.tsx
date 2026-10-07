@@ -370,7 +370,11 @@ export default function App() {
                 <div className="relative aspect-video overflow-hidden rounded-lg shadow-[0_14px_38px_rgba(0,0,0,0.55)]">
                   <iframe
                     className="absolute inset-0 h-full w-full"
-                    src="https://www.youtube.com/embed/videoseries?list=UU9tV0Z2xN1HtvQu5F-ERqpg&playsinline=1"
+                    src={
+                      videos[0]
+                        ? `https://www.youtube.com/embed/${videos[0].videoId}?playsinline=1`
+                        : "https://www.youtube.com/embed/videoseries?list=UU9tV0Z2xN1HtvQu5F-ERqpg&playsinline=1"
+                    }
                     title="Latest YouTube Video"
                     frameBorder="0"
                     loading="lazy"
@@ -394,7 +398,7 @@ export default function App() {
         </div>
       </Section>
 
-      {/* Recent Episodes Grid — auto-updates from build-time YouTube feed */}
+      {/* Recent Episodes Grid — live from /api/youtube */}
       <Section>
         <div className="max-w-7xl mx-auto">
           <SectionHeading title="Recent Episodes" subtitle="Catch up on what you missed" />
